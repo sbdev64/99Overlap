@@ -1,8 +1,8 @@
 import { notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { decks } from '@/db/schema'
+import { deckCards, decks } from '@/db/schema'
 import type { TrackedBoard } from '@/lib/decklist-parser'
 
 export interface DeckSummary {
@@ -43,6 +43,9 @@ export interface DeckCardEntry {
   name: string
   quantity: number
   board: TrackedBoard
+  /** True when this card also appears in at least one other deck. See
+   * docs/PRODUCT.md#4-overlap-detection. */
+  isOverlapping: boolean
 }
 
 export interface DeckDetail {
@@ -70,12 +73,29 @@ export const getDeck = createServerFn({ method: 'GET' })
       throw notFound()
     }
 
+    const cardIds = deck.deckCards.map((deckCard) => deckCard.cardId)
+    const overlapCounts =
+      cardIds.length > 0
+        ? await db
+            .select({
+              cardId: deckCards.cardId,
+              deckCount: sql<number>`count(distinct ${deckCards.deckId})`,
+            })
+            .from(deckCards)
+            .where(inArray(deckCards.cardId, cardIds))
+            .groupBy(deckCards.cardId)
+        : []
+    const overlappingCardIds = new Set(
+      overlapCounts.filter((row) => row.deckCount > 1).map((row) => row.cardId),
+    )
+
     const cards: DeckCardEntry[] = deck.deckCards
       .map((deckCard) => ({
         cardId: deckCard.cardId,
         name: deckCard.card.name,
         quantity: deckCard.quantity,
         board: deckCard.board,
+        isOverlapping: overlappingCardIds.has(deckCard.cardId),
       }))
       .sort((a, b) => {
         if (a.board !== b.board) return a.board === 'commander' ? -1 : 1
