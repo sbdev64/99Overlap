@@ -13,4 +13,11 @@ Find cards shared across your Magic: The Gathering Commander decks.
 
 ## Status
 
-🚧 Work in progress
+🚧 Work in progress — currently at the planning/scaffolding stage.
+
+## Docs
+
+- [docs/PRODUCT.md](docs/PRODUCT.md) — mission, domain model, feature spec, decision log
+- [docs/STACK.md](docs/STACK.md) — tech stack and rationale
+- [docs/ROADMAP.md](docs/ROADMAP.md) — milestones and issue breakdown
+- [CONTRIBUTING.md](CONTRIBUTING.md) — commit/branch/PR conventions
