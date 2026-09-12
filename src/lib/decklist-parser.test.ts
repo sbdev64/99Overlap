@@ -30,6 +30,12 @@ Deck
 Maybeboard
 1 Ram Through`
 
+// This is what the user's own Moxfield paste actually looks like: no section
+// headers at all, first card is the commander (see the module doc).
+const OBEKA_EXPORT = `1 Obeka, Splitter of Seconds (OTJ) 222
+1 Aarakocra Sneak (CLB) 54
+1 Aether Tunnel (M19) 43`
+
 describe('parseDecklist', () => {
   test('parses a Moxfield export with set codes and a Commander section', () => {
     const result = parseDecklist(ATRAXA_EXPORT)
@@ -73,7 +79,7 @@ describe('parseDecklist', () => {
     }
   })
 
-  test('parses a bare-format export (no set codes) with commander listed first', () => {
+  test('parses a bare-format export (no set codes) with an explicit Commander header', () => {
     const result = parseDecklist(VOJA_EXPORT)
 
     expect(result.commanderNames).toEqual(['Voja, Jaws of the Conclave'])
@@ -102,10 +108,26 @@ describe('parseDecklist', () => {
     expect(result.entries).toHaveLength(5)
   })
 
-  test('records a warning for an unparseable line instead of throwing', () => {
-    const result = parseDecklist('not a valid card line\n1 Sol Ring')
+  test('treats the first card as the commander when there is no header at all (real Moxfield paste shape)', () => {
+    const result = parseDecklist(OBEKA_EXPORT)
 
-    expect(result.warnings).toHaveLength(1)
+    expect(result.commanderNames).toEqual(['Obeka, Splitter of Seconds'])
+    expect(result.entries).toEqual([
+      { name: 'Obeka, Splitter of Seconds', quantity: 1, board: 'commander' },
+      { name: 'Aarakocra Sneak', quantity: 1, board: 'mainboard' },
+      { name: 'Aether Tunnel', quantity: 1, board: 'mainboard' },
+    ])
+  })
+
+  test('first-card-is-commander still respects a later explicit Sideboard header', () => {
+    const result = parseDecklist(
+      '1 Obeka, Splitter of Seconds (OTJ) 222\n1 Sol Ring (SLD) 123\n\nSideboard\n1 Containment Priest (M21) 13',
+    )
+
+    expect(result.commanderNames).toEqual(['Obeka, Splitter of Seconds'])
+    expect(result.entries.some((e) => e.name === 'Containment Priest')).toBe(
+      false,
+    )
     expect(result.entries).toContainEqual({
       name: 'Sol Ring',
       quantity: 1,
@@ -113,11 +135,24 @@ describe('parseDecklist', () => {
     })
   })
 
-  test('skips zero-quantity lines', () => {
+  test('records a warning for an unparseable line instead of throwing', () => {
+    const result = parseDecklist('not a valid card line\n1 Sol Ring')
+
+    expect(result.warnings).toHaveLength(1)
+    // No "Commander" header anywhere, so the first real card line (Sol Ring)
+    // is treated as the commander.
+    expect(result.entries).toContainEqual({
+      name: 'Sol Ring',
+      quantity: 1,
+      board: 'commander',
+    })
+  })
+
+  test('skips zero-quantity lines without counting them as the commander', () => {
     const result = parseDecklist('0 Sol Ring\n1 Arcane Signet')
 
     expect(result.entries).toEqual([
-      { name: 'Arcane Signet', quantity: 1, board: 'mainboard' },
+      { name: 'Arcane Signet', quantity: 1, board: 'commander' },
     ])
   })
 
