@@ -11,6 +11,18 @@ Find cards shared across your Magic: The Gathering Commander decks.
 - Find cards shared across decks
 - See which decks contain each card
 
+## Development
+
+Requires [Bun](https://bun.sh).
+
+```bash
+bun install
+bun run dev
+```
+
+Routes live under `src/routes` (file-based routing via TanStack Router);
+`src/routeTree.gen.ts` is generated, don't edit it by hand.
+
 ## Status
 
 🚧 Work in progress — currently at the planning/scaffolding stage.
