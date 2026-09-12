@@ -69,20 +69,21 @@ commander + list of (quantity, card name) pairs, creates/reuses `Card` rows
 by name, creates a `Deck` row, and populates `DeckCard`. The raw pasted text
 is stored on the deck so future re-imports can diff against it.
 
-Expected input format (Moxfield's plain-text export), roughly:
+Expected input format (the user's actual Moxfield copy-paste): a flat list
+with no section headers, where **the first card line is always the
+commander**:
 
 ```
-1 Sol Ring
-1 Arcane Signet
-...
-
-Commander
-1 Atraxa, Grand Unifier
+1 Obeka, Splitter of Seconds (OTJ) 222
+1 Aarakocra Sneak (CLB) 54
+1 Aether Tunnel (M19) 43
 ```
 
-The parser must be tolerant of Moxfield's exact section headers and minor
-formatting variance — treat the real export format as the spec once we
-paste a real sample during implementation, not this sketch.
+The parser (`src/lib/decklist-parser.ts`) also tolerates an explicit
+`Commander` header section, if one is ever present, in which case that takes
+priority over the first-card rule. See the decision log for how this was
+confirmed and its known limitation (Partner/Background two-commander decks
+aren't handled by the first-card rule yet).
 
 ### 2. Update a deck
 
@@ -158,7 +159,8 @@ having run first. Noted here for later; not scheduled as blocking work.
 | 2026-09-12 | Paste-only Moxfield import for v1 | Moxfield's fetch API is unofficial/undocumented; paste always works and unblocks everything else. Live fetch is a candidate v2 enhancement. |
 | 2026-09-12 | Card identity = exact name match | Simplest correct rule for Commander singleton decks; no card appears twice in one deck under normal rules, so name is a safe de-dupe key. |
 | 2026-09-12 | Unit tests use `bun test` instead of Vitest (revises docs/STACK.md's original pick) | We're already Bun-native everywhere (runtime, `bun:sqlite`); `bun test` is Jest-compatible and needs no extra dependency, so it's a strictly smaller/faster choice than adding Vitest. |
-| 2026-09-12 | Moxfield decklist format confirmed by cross-checking multiple independent open-source parsers (Moxfield itself blocks non-browser requests, so no first-party sample was fetchable) | Card lines are `<qty>[x] <name>[ (SETCODE) collector#]`; sections are standalone header lines (`Commander`, `Deck`/`Mainboard`, `Sideboard`, `Maybeboard`, `Companion`, case-insensitive, optional trailing colon) each followed by their cards until the next header or blank-line break. |
+| 2026-09-12 | Moxfield decklist format: user confirmed their actual paste is a flat list with **no section headers**, first card = commander | Superseded an earlier guess (built by cross-checking third-party parsers, since Moxfield itself blocks non-browser requests) that assumed an explicit `Commander:` header section. The parser now uses the first-card rule by default, but still honors an explicit `Commander` header if one is ever present, so both shapes work. Card lines are `<qty>[x] <name>[ (SETCODE) collector#]`. |
+| 2026-09-12 | Partner/Background (two-commander) decks not yet handled by the decklist parser | User wasn't sure whether any of their decks use two commanders; shipping the single-commander (first-card) rule now and deferring this rather than guessing at a convention with no real example to check against. Revisit if a real deck needs it. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this
