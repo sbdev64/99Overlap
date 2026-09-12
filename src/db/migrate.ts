@@ -1,5 +1,7 @@
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator'
-import { db } from './client'
+// client.ts applies pending migrations as soon as it's imported — see the
+// comment there. This script exists as an explicit standalone entry point
+// (e.g. for CI or a future deployment step) that doesn't require starting
+// the whole app.
+import './client'
 
-migrate(db, { migrationsFolder: './drizzle' })
 console.log('Migrations applied.')
