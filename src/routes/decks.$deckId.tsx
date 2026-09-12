@@ -1,9 +1,26 @@
-import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+  useRouter,
+} from '@tanstack/react-router'
 import { useState } from 'react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { type DeckCardEntry, getDeck } from '@/server/decks'
+import { deleteDeck } from '@/server/delete-deck'
 import { updateDeck } from '@/server/update-deck'
 
 export const Route = createFileRoute('/decks/$deckId')({
@@ -14,6 +31,7 @@ export const Route = createFileRoute('/decks/$deckId')({
 function DeckDetailPage() {
   const deck = Route.useLoaderData()
   const router = useRouter()
+  const navigate = useNavigate()
   const commanders = deck.cards.filter((card) => card.board === 'commander')
   const mainboard = deck.cards.filter((card) => card.board === 'mainboard')
   const hasOverlap = deck.cards.some((card) => card.isOverlapping)
@@ -22,6 +40,8 @@ function DeckDetailPage() {
   const [sourceText, setSourceText] = useState(deck.sourceText)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   async function handleSave(event: React.FormEvent) {
     event.preventDefault()
@@ -35,6 +55,20 @@ function DeckDetailPage() {
       setError(err instanceof Error ? err.message : 'Failed to update deck')
     } finally {
       setPending(false)
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await deleteDeck({ data: { deckId: deck.id } })
+      await navigate({ to: '/decks' })
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : 'Failed to delete deck',
+      )
+      setDeleting(false)
     }
   }
 
@@ -52,16 +86,49 @@ function DeckDetailPage() {
           )}
         </div>
         {!editing && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSourceText(deck.sourceText)
-              setError(null)
-              setEditing(true)
-            }}
-          >
-            Edit decklist
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSourceText(deck.sourceText)
+                setError(null)
+                setEditing(true)
+              }}
+            >
+              Edit decklist
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Delete deck</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete "{deck.name}"?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes the deck and its card list. Cards it shares
+                    with other decks aren't affected.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                {deleteError && (
+                  <p className="text-destructive text-sm">{deleteError}</p>
+                )}
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={deleting}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleDelete()
+                    }}
+                    disabled={deleting}
+                  >
+                    {deleting ? 'Deleting…' : 'Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
       </div>
 
