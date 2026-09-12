@@ -41,8 +41,18 @@ Commit/branch/PR conventions: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Prefer editing/extending `docs/PRODUCT.md` over letting domain knowledge
   live only in code comments or chat — that file is the source of truth for
   "why" the app behaves a certain way.
+- **In any `createServerFn` handler, import `@/db/client` dynamically inside
+  the handler** (`const { db } = await import('@/db/client')`), never as a
+  top-level `import`. `client.ts` opens the SQLite connection as a
+  module-scope side effect via `bun:sqlite`, which doesn't exist in the
+  browser. A top-level import gets pulled into the client-side split of a
+  server function file and crashes on page load — this actually happened
+  (see the `fix: dynamically import db in server functions` commit). Keep
+  any other module-scope code in that file (helper functions, types) from
+  referencing `db` too, or the same leak reappears through them.
 
 ## Status
 
-No application code yet. Currently at the planning/scaffolding stage — see
-[docs/ROADMAP.md](docs/ROADMAP.md) for the first milestone.
+M0 (scaffolding) and issues #6-#8 of M1 are done: paste-import, the decklist
+parser, and a deck list page all work end-to-end. See
+[docs/ROADMAP.md](docs/ROADMAP.md) for what's left.
