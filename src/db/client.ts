@@ -6,7 +6,8 @@ import * as schema from './schema'
 
 // Single local SQLite file — see docs/STACK.md. Override with DATABASE_URL
 // for tests or an alternate location.
-export const DATABASE_URL = process.env.DATABASE_URL ?? './data/99overlap.sqlite'
+export const DATABASE_URL =
+  process.env.DATABASE_URL ?? './data/99overlap.sqlite'
 
 const dir = dirname(DATABASE_URL)
 if (dir !== '.' && !existsSync(dir)) {
