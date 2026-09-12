@@ -157,6 +157,8 @@ having run first. Noted here for later; not scheduled as blocking work.
 | 2026-09-12 | Full staple location tracking, not just a flag | A flag alone doesn't answer "what do I move" — the stated mission requires knowing *where* the card currently is. |
 | 2026-09-12 | Paste-only Moxfield import for v1 | Moxfield's fetch API is unofficial/undocumented; paste always works and unblocks everything else. Live fetch is a candidate v2 enhancement. |
 | 2026-09-12 | Card identity = exact name match | Simplest correct rule for Commander singleton decks; no card appears twice in one deck under normal rules, so name is a safe de-dupe key. |
+| 2026-09-12 | Unit tests use `bun test` instead of Vitest (revises docs/STACK.md's original pick) | We're already Bun-native everywhere (runtime, `bun:sqlite`); `bun test` is Jest-compatible and needs no extra dependency, so it's a strictly smaller/faster choice than adding Vitest. |
+| 2026-09-12 | Moxfield decklist format confirmed by cross-checking multiple independent open-source parsers (Moxfield itself blocks non-browser requests, so no first-party sample was fetchable) | Card lines are `<qty>[x] <name>[ (SETCODE) collector#]`; sections are standalone header lines (`Commander`, `Deck`/`Mainboard`, `Sideboard`, `Maybeboard`, `Companion`, case-insensitive, optional trailing colon) each followed by their cards until the next header or blank-line break. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this

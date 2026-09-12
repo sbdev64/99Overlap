@@ -18,7 +18,7 @@ that trades off against stability, the trade-off is called out explicitly.
 | UI components | **shadcn/ui** | Not a dependency — components are copied into the repo, so they're fully ours to edit. Built on Radix primitives (accessible by default). Current default for anyone building a custom UI quickly in React. |
 | Client data/cache | **TanStack Query** | For mutations like "mark staple" / "move staple here" that want optimistic updates; pairs with TanStack Start/Router. |
 | Linting/formatting | **Biome** | Single Rust-based tool replacing ESLint + Prettier; much faster, one config file. |
-| Testing | **Vitest** (unit) + **Playwright** (e2e, once there's UI worth covering end-to-end) | Current standard pairing for Vite-based apps. |
+| Testing | **`bun test`** (unit, built into the runtime) + **Playwright** (e2e, once there's UI worth covering end-to-end) | Jest-compatible API, zero extra dependency since we're already Bun-native everywhere else. Revised from the original Vitest pick — see decision log in [PRODUCT.md](PRODUCT.md). |
 | Git hooks | **Lefthook** | Rust-based, faster and simpler config than Husky; runs Biome + typecheck + (later) commitlint on commit/push. |
 | Commit linting | **commitlint** (conventional-commit config) | Enforces the Conventional Commits format described in [CONTRIBUTING.md](../CONTRIBUTING.md). |
 | External data | **Scryfall API** | Free MTG card database for enrichment (images, mana cost, color identity) once decks are stored — see [PRODUCT.md](PRODUCT.md#7-card-metadata-enrichment-nice-to-have-not-blocking-v1). |
