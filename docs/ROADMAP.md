@@ -62,6 +62,10 @@ Goal: mark a card as a staple and always know what to physically move.
       `scryfallId`, mana cost, type line, image URL; rate-limited per
       Scryfall's guidance.
 - [ ] **Card images in deck view** — use enrichment data once available.
+- [ ] **Group cards by type in deck view** — classify each card (Creature,
+      Planeswalker, Instant, Sorcery, Artifact, Enchantment, Land) from its
+      `typeLine` and group the deck's card list by type. Depends on Scryfall
+      enrichment above. See docs/PRODUCT.md#8-card-type-classification-in-deck-view-future-not-needed-yet.
 - [ ] **Search/filter across decks** — find a card by name across all saved
       decks (useful before even opening a specific deck).
 - [ ] **All-staples overview page** — one place listing every staple and its

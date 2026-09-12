@@ -133,6 +133,15 @@ required for the core overlap/staple logic, which only needs card names.
 Scryfall asks for polite rate-limiting (~50-100ms between requests) and has
 a bulk-data download for offline lookups if we end up doing this a lot.
 
+### 8. Card type classification in deck view (future, not needed yet)
+
+The user wants each deck view to group/classify its cards by primary type —
+Creature, Planeswalker, Instant, Sorcery, Artifact, Enchantment, Land.
+Derivable from `typeLine` (already on `Card`, filled in by Scryfall
+enrichment in feature 7 above) by parsing the type(s) before the em dash,
+e.g. "Legendary Creature — Phyrexian Angel" → Creature. Depends on feature 7
+having run first. Noted here for later; not scheduled as blocking work.
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
