@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,7 +34,12 @@ function Home() {
 
   return (
     <main>
-      <h1 className="text-2xl font-semibold">99Overlap</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">99Overlap</h1>
+        <Link to="/decks" className="text-sm underline">
+          View saved decks
+        </Link>
+      </div>
       <p className="text-muted-foreground">
         Paste a decklist copied from Moxfield to import it.
       </p>
