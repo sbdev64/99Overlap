@@ -1,7 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { db } from '@/db/client'
 import { cards, deckCards, decks } from '@/db/schema'
 import { parseDecklist } from '@/lib/decklist-parser'
 
@@ -25,35 +24,44 @@ function normalizeCardName(name: string) {
   return name.trim().replace(/\s+/g, ' ')
 }
 
-type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
-
-/** Finds an existing Card by case-insensitive name match, or creates one.
- * See the "Card identity = exact name match" decision in docs/PRODUCT.md. */
-async function findOrCreateCardId(
-  tx: Transaction,
-  name: string,
-): Promise<{ id: number; isNew: boolean }> {
-  const normalized = normalizeCardName(name)
-
-  const existing = await tx
-    .select({ id: cards.id })
-    .from(cards)
-    .where(sql`lower(${cards.name}) = lower(${normalized})`)
-    .get()
-  if (existing) {
-    return { id: existing.id, isNew: false }
-  }
-
-  const [created] = await tx
-    .insert(cards)
-    .values({ name: normalized })
-    .returning({ id: cards.id })
-  return { id: created.id, isNew: true }
-}
-
 export const importDeck = createServerFn({ method: 'POST' })
   .validator((input: unknown) => importDeckSchema.parse(input))
   .handler(async ({ data }): Promise<ImportDeckResult> => {
+    // Imported dynamically (rather than as a top-level `import`) so that
+    // `bun:sqlite` never ends up in the client bundle. A static top-level
+    // import of `@/db/client` here would otherwise get pulled into the
+    // client-side split of this file and crash in the browser, since
+    // client.ts opens the database as a module-scope side effect. See the
+    // decision log in docs/PRODUCT.md.
+    const { db } = await import('@/db/client')
+
+    /** Finds an existing Card by case-insensitive name match, or creates
+     * one. See the "Card identity = exact name match" decision in
+     * docs/PRODUCT.md. Nested here (rather than a module-level function) so
+     * it can't accidentally keep the `db` import alive in the client build
+     * the way a module-scope reference to `typeof db` would. */
+    async function findOrCreateCardId(
+      tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+      name: string,
+    ): Promise<{ id: number; isNew: boolean }> {
+      const normalized = normalizeCardName(name)
+
+      const existing = await tx
+        .select({ id: cards.id })
+        .from(cards)
+        .where(sql`lower(${cards.name}) = lower(${normalized})`)
+        .get()
+      if (existing) {
+        return { id: existing.id, isNew: false }
+      }
+
+      const [created] = await tx
+        .insert(cards)
+        .values({ name: normalized })
+        .returning({ id: cards.id })
+      return { id: created.id, isNew: true }
+    }
+
     const parsed = parseDecklist(data.sourceText)
 
     // A singleton decklist shouldn't repeat a name within one board, but

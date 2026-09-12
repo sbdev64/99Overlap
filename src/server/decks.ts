@@ -1,6 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
 import { desc } from 'drizzle-orm'
-import { db } from '@/db/client'
 import { decks } from '@/db/schema'
 
 export interface DeckSummary {
@@ -12,6 +11,10 @@ export interface DeckSummary {
 
 export const listDecks = createServerFn({ method: 'GET' }).handler(
   async (): Promise<DeckSummary[]> => {
+    // Dynamic import so `bun:sqlite` never ends up in the client bundle —
+    // see the comment in src/server/import-deck.ts.
+    const { db } = await import('@/db/client')
+
     const rows = await db
       .select({
         id: decks.id,
