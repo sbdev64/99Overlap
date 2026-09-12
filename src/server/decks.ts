@@ -52,6 +52,7 @@ export interface DeckDetail {
   id: number
   name: string
   commanderName: string | null
+  sourceText: string
   cards: DeckCardEntry[]
 }
 
@@ -106,6 +107,7 @@ export const getDeck = createServerFn({ method: 'GET' })
       id: deck.id,
       name: deck.name,
       commanderName: deck.commanderName,
+      sourceText: deck.sourceText,
       cards,
     }
   })

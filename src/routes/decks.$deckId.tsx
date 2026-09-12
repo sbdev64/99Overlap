@@ -1,6 +1,10 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { type DeckCardEntry, getDeck } from '@/server/decks'
+import { updateDeck } from '@/server/update-deck'
 
 export const Route = createFileRoute('/decks/$deckId')({
   component: DeckDetailPage,
@@ -9,9 +13,30 @@ export const Route = createFileRoute('/decks/$deckId')({
 
 function DeckDetailPage() {
   const deck = Route.useLoaderData()
+  const router = useRouter()
   const commanders = deck.cards.filter((card) => card.board === 'commander')
   const mainboard = deck.cards.filter((card) => card.board === 'mainboard')
   const hasOverlap = deck.cards.some((card) => card.isOverlapping)
+
+  const [editing, setEditing] = useState(false)
+  const [sourceText, setSourceText] = useState(deck.sourceText)
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSave(event: React.FormEvent) {
+    event.preventDefault()
+    setPending(true)
+    setError(null)
+    try {
+      await updateDeck({ data: { deckId: deck.id, sourceText } })
+      setEditing(false)
+      await router.invalidate()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update deck')
+    } finally {
+      setPending(false)
+    }
+  }
 
   return (
     <main>
@@ -19,9 +44,50 @@ function DeckDetailPage() {
         ← All decks
       </Link>
 
-      <h1 className="mt-2 text-2xl font-semibold">{deck.name}</h1>
-      {deck.commanderName && (
-        <p className="text-muted-foreground">{deck.commanderName}</p>
+      <div className="mt-2 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">{deck.name}</h1>
+          {deck.commanderName && (
+            <p className="text-muted-foreground">{deck.commanderName}</p>
+          )}
+        </div>
+        {!editing && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSourceText(deck.sourceText)
+              setError(null)
+              setEditing(true)
+            }}
+          >
+            Edit decklist
+          </Button>
+        )}
+      </div>
+
+      {editing && (
+        <form className="mt-4 flex flex-col gap-2" onSubmit={handleSave}>
+          <Textarea
+            value={sourceText}
+            onChange={(e) => setSourceText(e.target.value)}
+            rows={12}
+            required
+          />
+          <div className="flex gap-2">
+            <Button type="submit" disabled={pending}>
+              {pending ? 'Saving…' : 'Save changes'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+          {error && <p className="text-destructive text-sm">{error}</p>}
+        </form>
       )}
 
       {hasOverlap && (
