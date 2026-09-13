@@ -249,6 +249,30 @@ in this app — see feature 9's decision to snapshot the name at log time.
 Shows an explicit empty state ("no games logged yet") instead of rendering
 charts with zero data.
 
+### 12. Collection-level stats (M6)
+
+A second section on `/stats`, scoped to owned decks (`precon`/`custom` —
+Planning decks aren't physically built, so they're excluded from all
+three insights here, same reasoning as feature 10's already-owned check).
+Aggregation is pure and unit-tested (`src/lib/collection-stats.ts`),
+fed by a dedicated `getCollectionStats` server function.
+
+- **Color identity across owned decks** — bar chart, decks grouped by
+  `Deck.colorIdentity` (feature 10's auto-derived field) via the shared
+  `colorIdentityLabel` formatter.
+- **Mana curve across owned decks** — bar chart, summing `DeckCard.quantity`
+  by `Card.cmc` across every owned deck's cards (commanders included) —
+  a card owned in two decks counts twice, since each deck-slot needs its
+  own physical copy.
+- **Gathering dust** — a plain list (not a chart), not a ranking: decks
+  never played, or not played in 90+ days, dustiest (never-played) first.
+  Reuses the `MAX(games.date)` per-deck pattern from feature 9's
+  "last played" but excludes Planning decks and applies the threshold.
+
+All three degrade gracefully when the underlying enrichment
+(`colorIdentity`/`cmc`) hasn't run yet for a card — it just falls into an
+"Unknown" bucket rather than being dropped or crashing the aggregation.
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
@@ -280,6 +304,7 @@ charts with zero data.
 | 2026-09-13 | UI/UX visual direction: "retro flat magic / wizard-like" (#68), not a generic redesign | User's explicit direction — parchment/ink tones, a fantasy-adjacent display font, mana-color accents; flat, not skeuomorphic. Bundled with de-duplicating the nav (currently copy-pasted across five route files) since both are "how the app is laid out," not new features. |
 | 2026-09-13 | M5 (Improvements) closed same-day — deck classification, sectioned/filterable decks list, Planning decks' owned/need-to-buy check, deck metadata, keyboard shortcuts (#60-64) | Found and fixed a real bug while testing #63: `scryfall-enrich.ts` keyed lookup results by Scryfall's *returned* canonical name rather than the name actually queried, so any card where Scryfall's spelling differs in punctuation from the query (e.g. an apostrophe placed differently) silently never got enriched. Fixed by normalizing both sides before matching. Keyboard shortcuts (#64) could only be verified via SSR/build, not actual keydown behavior — no headless browser or DOM-testing setup in this environment; flagged for the user to confirm by hand. |
 | 2026-09-13 | Statistics dashboard (#65) uses `@tanstack/charts` + its `/react` subpath, not the separately-published `@tanstack/react-charts` package | Initially installed `@tanstack/react-charts` since it matched the name from earlier planning, but its bundled types have no usage examples and no README. Fetched the actual TanStack Charts docs (quick-start, bar/line examples) and confirmed the current, documented React entry point is `@tanstack/charts/react` — a subpath of the core grammar-of-graphics package, not the older same-org package. Swapped before writing any chart code. Verified real SSR output (correct SVG geometry matching aggregated data) before considering the integration trustworthy, given the library is pre-1.0 and internally quite complex (dozens of composable mark/scale/transform modules). |
+| 2026-09-13 | M6 (Statistics) closed same-day — collection-level stats (#66) scoped to owned (precon/custom) decks only, "gathering dust" rendered as a plain list rather than a chart | Planning decks aren't physically built, so counting them toward color identity spread or mana curve would misrepresent the actual collection — same exclusion logic as feature 10's already-owned check. "Gathering dust" is a ranking of decks, not really chart-shaped data (dates and deck links matter more than a bar's height), so it's a plain list with exact last-played dates, matching the issue's explicit "surfaced as a simple list" suggestion. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this
