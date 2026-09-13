@@ -51,6 +51,11 @@ export function DatePicker({
               setOpen(false)
             }
           }}
+          // Month/year dropdowns instead of one-month-at-a-time arrows —
+          // logging a game from a year-old backfilled spreadsheet entry
+          // shouldn't take dozens of clicks. Defaults to a 100-year range.
+          captionLayout="dropdown"
+          defaultMonth={selected}
           autoFocus
         />
       </PopoverContent>
