@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils'
 import { type DeckCardEntry, getDeck } from '@/server/decks'
 import { deleteDeck } from '@/server/delete-deck'
 import { markShared } from '@/server/mark-shared'
+import { unmarkShared } from '@/server/unmark-shared'
 import { updateDeck } from '@/server/update-deck'
 
 export const Route = createFileRoute('/decks/$deckId')({
@@ -218,7 +219,11 @@ function CardLine({ card }: { card: DeckCardEntry }) {
     </>
   )
 
-  if (!card.isOverlapping) {
+  // Once a card is shared, keep it clickable (to unmark or update its
+  // location) even if it no longer overlaps with another deck — it must
+  // stay manageable from every view it's shown in, not just while
+  // overlapping. See docs/PRODUCT.md#5-marking-a-shared-card.
+  if (!card.isOverlapping && !card.isShared) {
     return <li className="rounded px-1">{label}</li>
   }
 
@@ -263,6 +268,22 @@ function SharedCardPicker({
     }
   }
 
+  async function handleUnmark() {
+    setPending(true)
+    setError(null)
+    try {
+      await unmarkShared({ data: { cardId: card.cardId } })
+      setOpen(false)
+      await router.invalidate()
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to unmark shared card',
+      )
+    } finally {
+      setPending(false)
+    }
+  }
+
   return (
     <Dialog
       open={open}
@@ -287,11 +308,15 @@ function SharedCardPicker({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Mark "{card.name}" as shared</DialogTitle>
+          <DialogTitle>
+            {card.isShared
+              ? `"${card.name}" is shared`
+              : `Mark "${card.name}" as shared`}
+          </DialogTitle>
           <DialogDescription>
-            This card appears in multiple decks. If you only own one physical
-            copy and move it between decks, mark it here and say which deck
-            currently has it.
+            {card.isShared
+              ? 'You own one physical copy of this card and move it between decks by hand. Update which deck currently has it, or stop tracking it as shared.'
+              : 'This card appears in multiple decks. If you only own one physical copy and move it between decks, mark it here and say which deck currently has it.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -314,6 +339,16 @@ function SharedCardPicker({
         {error && <p className="text-destructive text-sm">{error}</p>}
 
         <DialogFooter>
+          {card.isShared && (
+            <Button
+              variant="ghost"
+              className="text-destructive hover:text-destructive sm:mr-auto"
+              onClick={handleUnmark}
+              disabled={pending}
+            >
+              Unmark as shared
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
@@ -322,7 +357,11 @@ function SharedCardPicker({
             Cancel
           </Button>
           <Button onClick={handleConfirm} disabled={pending}>
-            {pending ? 'Saving…' : 'Mark as shared'}
+            {pending
+              ? 'Saving…'
+              : card.isShared
+                ? 'Update location'
+                : 'Mark as shared'}
           </Button>
         </DialogFooter>
       </DialogContent>
