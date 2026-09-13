@@ -10,7 +10,7 @@ const deleteDeckSchema = z.object({
 /**
  * Deletes a Deck. Its DeckCard rows cascade-delete at the DB level (see the
  * `onDelete: 'cascade'` FK in src/db/schema.ts); every Card row persists,
- * since other decks may still reference it. If this deck was a staple's
+ * since other decks may still reference it. If this deck was a shared card's
  * `currentDeckId`, that FK's `onDelete: 'set null'` clears it automatically
  * — surfacing that to the user is issue #17 (M2), not this one.
  * See docs/PRODUCT.md#3-delete-a-deck.

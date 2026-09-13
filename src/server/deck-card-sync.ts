@@ -11,7 +11,7 @@ function normalizeCardName(name: string) {
 
 /** Finds an existing Card by case-insensitive name match, or creates one.
  * See the "Card identity = exact name match" decision in docs/PRODUCT.md.
- * Never touches `isStaple`/`currentDeckId` on an existing card. */
+ * Never touches `isShared`/`currentDeckId` on an existing card. */
 async function findOrCreateCardId(
   tx: Transaction,
   name: string,

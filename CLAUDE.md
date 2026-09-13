@@ -8,9 +8,9 @@ it points to the deeper docs instead of repeating them.
 A personal tool that imports MTG Commander decklists (pasted from Moxfield),
 stores them, and finds cards that appear in more than one deck. Its actual
 purpose is solving a real-world logistics problem: the user owns single
-copies of some expensive cards ("staples", e.g. Smothering Tithe) and moves
-them physically between decks before playing. The app should always be able
-to answer: *"which physical cards do I need to move before I play deck X?"*
+copies of some expensive cards (e.g. Smothering Tithe) and moves them
+physically between decks before playing. The app should always be able to
+answer: *"which physical cards do I need to move before I play deck X?"*
 
 Full product context, domain model, and feature spec: [docs/PRODUCT.md](docs/PRODUCT.md)
 Stack choice and rationale: [docs/STACK.md](docs/STACK.md)
@@ -20,10 +20,13 @@ Commit/branch/PR conventions: [CONTRIBUTING.md](CONTRIBUTING.md)
 ## Key decisions already made (don't re-litigate without asking)
 
 - **Self-hosted web app**, not a desktop app. Runs as a small server + browser UI.
-- **Full staple location tracking**, not just a flag. A staple card has a
-  "current deck" pointer the user updates manually when they move the
-  physical card. Deck views must surface "missing staples" (staples the deck
-  needs that currently live in another deck).
+- **Full shared-card location tracking**, not just a flag. A card marked
+  "shared" has a "current deck" pointer the user updates manually when they
+  move the physical card. Deck views must surface "missing shared cards"
+  (shared cards the deck needs that currently live in another deck). Called
+  "staple" in earlier work — renamed per user feedback since "staple"
+  already means something else in MTG (a generically powerful/commonly-run
+  card); "shared" describes the actual mechanic.
 - **Import is paste-only for v1.** No live Moxfield API fetching yet (that's
   a possible later enhancement, not in scope now).
 - Runtime/stack: Bun + TanStack Start + Drizzle ORM + SQLite (via
@@ -53,6 +56,6 @@ Commit/branch/PR conventions: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Status
 
-M0 (scaffolding) and issues #6-#8 of M1 are done: paste-import, the decklist
-parser, and a deck list page all work end-to-end. See
+M0 and M1 (paste-import, parser, list/detail pages, overlap detection,
+edit/delete) are done end-to-end. M2 (shared-card tracking) is underway. See
 [docs/ROADMAP.md](docs/ROADMAP.md) for what's left.

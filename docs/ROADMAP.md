@@ -10,17 +10,17 @@ before/alongside GitHub issues existing.
 Goal: an empty-but-real app skeleton with the tooling from
 [STACK.md](STACK.md) wired up, deployable to "hello world," CI green.
 
-- [ ] **Scaffold TanStack Start app with Bun** — init project, TypeScript
+- [x] **Scaffold TanStack Start app with Bun** — init project, TypeScript
       strict mode, basic route renders. `bun run dev` works.
-- [ ] **Wire up Drizzle + SQLite** — schema file for `Deck`/`Card`/`DeckCard`
+- [x] **Wire up Drizzle + SQLite** — schema file for `Deck`/`Card`/`DeckCard`
       (per [PRODUCT.md](PRODUCT.md#core-domain-model)), `drizzle-kit`
       migration generated and applied to a local `.sqlite` file.
-- [ ] **Add Tailwind v4 + shadcn/ui** — base layout renders with at least
+- [x] **Add Tailwind v4 + shadcn/ui** — base layout renders with at least
       one shadcn component.
-- [ ] **Add Biome + Lefthook + commitlint** — `bun run lint`/`format`
+- [x] **Add Biome + Lefthook + commitlint** — `bun run lint`/`format`
       scripts; pre-commit hook runs Biome + typecheck; commit-msg hook
       enforces Conventional Commits.
-- [ ] **CI workflow** — GitHub Actions: install, typecheck, lint, build on
+- [x] **CI workflow** — GitHub Actions: install, typecheck, lint, build on
       every PR.
 
 ## M1 — Import, store, and see overlaps (MVP)
@@ -28,31 +28,32 @@ Goal: an empty-but-real app skeleton with the tooling from
 Goal: paste a decklist, see it saved, see shared cards highlighted across
 decks. This is the first genuinely useful version.
 
-- [ ] **Decklist text parser** — parse Moxfield's plain-text export into
+- [x] **Decklist text parser** — parse Moxfield's plain-text export into
       commander + mainboard (quantity, name) pairs. Unit-tested against a
       couple of real pasted exports.
-- [ ] **Import deck form** — paste box → creates a `Deck` + `DeckCard` rows,
+- [x] **Import deck form** — paste box → creates a `Deck` + `DeckCard` rows,
       reusing existing `Card` rows by name.
-- [ ] **Deck list page** — shows all saved decks (name, commander).
-- [ ] **Deck detail page** — shows a deck's full card list.
-- [ ] **Overlap detection** — query/derive which cards appear in >1 deck;
+- [x] **Deck list page** — shows all saved decks (name, commander).
+- [x] **Deck detail page** — shows a deck's full card list.
+- [x] **Overlap detection** — query/derive which cards appear in >1 deck;
       highlight them on the deck detail page.
-- [ ] **Edit/re-import a deck** — re-paste updates an existing deck's cards
+- [x] **Edit/re-import a deck** — re-paste updates an existing deck's cards
       without touching other decks' data.
-- [ ] **Delete a deck** — with confirmation; cascades `DeckCard` rows only.
+- [x] **Delete a deck** — with confirmation; cascades `DeckCard` rows only.
 
-## M2 — Staple tracking (the core mission)
+## M2 — Shared-card tracking (the core mission)
 
-Goal: mark a card as a staple and always know what to physically move.
+Goal: mark a card as shared and always know what to physically move.
 
-- [ ] **Mark card as staple** — clicking a highlighted card in a deck view
-      opens a picker to set `isStaple = true` and choose `currentDeckId`.
-- [ ] **Unmark a staple** — revert `isStaple`, clear `currentDeckId`.
-- [ ] **"Missing staples" panel on deck detail page** — lists staples this
-      deck needs whose `currentDeckId` points elsewhere, naming that deck.
-- [ ] **"Move staple here" action** — one click sets `currentDeckId` to the
+- [x] **Mark card as shared** — clicking a highlighted card in a deck view
+      opens a picker to set `isShared = true` and choose `currentDeckId`.
+- [ ] **Unmark a shared card** — revert `isShared`, clear `currentDeckId`.
+- [ ] **"Missing shared cards" panel on deck detail page** — lists shared
+      cards this deck needs whose `currentDeckId` points elsewhere, naming
+      that deck.
+- [ ] **"Move here" action** — one click sets `currentDeckId` to the
       currently viewed deck.
-- [ ] **Handle deleting a deck that holds a staple** — staple becomes
+- [ ] **Handle deleting a deck that holds a shared card** — the card becomes
       unassigned and is flagged for the user across the app (not silently
       dropped).
 
@@ -68,8 +69,8 @@ Goal: mark a card as a staple and always know what to physically move.
       enrichment above. See docs/PRODUCT.md#8-card-type-classification-in-deck-view-future-not-needed-yet.
 - [ ] **Search/filter across decks** — find a card by name across all saved
       decks (useful before even opening a specific deck).
-- [ ] **All-staples overview page** — one place listing every staple and its
-      current deck, independent of any single deck view.
+- [ ] **All-shared-cards overview page** — one place listing every shared
+      card and its current deck, independent of any single deck view.
 
 ## M4 — Ship it
 
@@ -82,4 +83,4 @@ Goal: mark a card as a staple and always know what to physically move.
 ## Suggested GitHub labels
 
 `type:feature`, `type:bug`, `type:chore`, `type:docs`, `area:import`,
-`area:staples`, `area:ui`, `area:infra`.
+`area:shared`, `area:ui`, `area:infra`.
