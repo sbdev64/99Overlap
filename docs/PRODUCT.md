@@ -28,6 +28,7 @@ no sharing between users, no multi-tenancy concerns.
 Deck
   id
   name
+  type                     -- 'precon' | 'custom' | 'planning' (see feature 10)
   commanderName(s)        -- display only, from the parsed decklist
   colorIdentity            -- derived, display only
   sourceText               -- last raw pasted decklist (kept for re-import/diff)
@@ -208,6 +209,23 @@ of whether the deck still exists in the app. `Game.deckName` is a
 denormalized snapshot of the deck's name at log time (same pattern as
 `Deck.commanderName`), so a deleted or renamed deck doesn't blank out past
 history rows.
+
+### 10. Deck classification and Planning decks' already-owned check (M5)
+
+Every `Deck` has a `type`: `precon`, `custom`, or `planning`. The first two
+are decks the user physically owns; `planning` is a decklist for something
+they want to build but haven't bought yet. The decks list groups Precon and
+Custom into always-visible sections, with Planning behind a togglable
+third section (off by default).
+
+The actual reason for the classification: a Planning deck's card list
+flags each card as either already owned (linking to the owned deck(s) that
+have it) or needing to be bought. "Owned" means the card appears in at
+least one `precon`/`custom` deck — other Planning decks never count as
+owned, even toward each other. This is a scoped variant of the overlap
+detection in feature 4 above: same underlying "which decks have this
+card" query, just partitioned by deck type instead of surfacing every
+deck indiscriminately.
 
 ## Explicitly out of scope (for now)
 
