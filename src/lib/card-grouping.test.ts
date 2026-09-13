@@ -13,6 +13,7 @@ function makeCard(overrides: Partial<DeckCardEntry> & { name: string }) {
     currentDeckId: null,
     currentDeckName: null,
     decksWithThisCard: [],
+    ownedInDecks: [],
     imageUrl: null,
     typeLine: null,
     colorIdentity: null,

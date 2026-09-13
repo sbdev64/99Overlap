@@ -86,6 +86,10 @@ export interface DeckCardEntry {
    * choices for "which deck currently has this card physically" when
    * marking it shared. See docs/PRODUCT.md#5-marking-a-shared-card. */
   decksWithThisCard: DeckOption[]
+  /** Precon/Custom decks (never Planning) that have this card — used by a
+   * Planning deck's view to flag "already own" vs "need to buy". See
+   * docs/PRODUCT.md#10 / roadmap issue #62. */
+  ownedInDecks: DeckOption[]
 }
 
 export interface DeckDetail {
@@ -152,16 +156,27 @@ export const getDeck = createServerFn({ method: 'GET' })
               cardId: deckCards.cardId,
               deckId: deckCards.deckId,
               deckName: decks.name,
+              deckType: decks.type,
             })
             .from(deckCards)
             .innerJoin(decks, eq(deckCards.deckId, decks.id))
             .where(inArray(deckCards.cardId, cardIds))
         : []
     const decksByCardId = new Map<number, DeckOption[]>()
+    // Planning decks don't count as "owned" — this is what lets a Planning
+    // deck (see #62) flag which of its cards the user already has
+    // elsewhere. See docs/PRODUCT.md#10.
+    const ownedDecksByCardId = new Map<number, DeckOption[]>()
     for (const row of decksPerCard) {
       const list = decksByCardId.get(row.cardId) ?? []
       list.push({ id: row.deckId, name: row.deckName })
       decksByCardId.set(row.cardId, list)
+
+      if (row.deckType !== 'planning') {
+        const ownedList = ownedDecksByCardId.get(row.cardId) ?? []
+        ownedList.push({ id: row.deckId, name: row.deckName })
+        ownedDecksByCardId.set(row.cardId, ownedList)
+      }
     }
 
     const currentDeckIds = deck.deckCards
@@ -201,6 +216,7 @@ export const getDeck = createServerFn({ method: 'GET' })
               ? (deckNameById.get(deckCard.card.currentDeckId) ?? null)
               : null,
           decksWithThisCard: sharedDecks,
+          ownedInDecks: ownedDecksByCardId.get(deckCard.cardId) ?? [],
         }
       })
       .sort((a, b) => {

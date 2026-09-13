@@ -60,9 +60,11 @@ function DeckDetailPage() {
   const deck = Route.useLoaderData()
   const router = useRouter()
   const navigate = useNavigate()
+  const isPlanning = deck.type === 'planning'
   const commanders = deck.cards.filter((card) => card.board === 'commander')
   const mainboard = deck.cards.filter((card) => card.board === 'mainboard')
-  const hasOverlap = deck.cards.some((card) => card.isOverlapping)
+  const hasOverlap =
+    !isPlanning && deck.cards.some((card) => card.isOverlapping)
   const [groupBy, setGroupBy] = useState<GroupBy>('type')
   const mainboardGroups = groupCards(mainboard, groupBy)
   // Shared cards this deck needs that are currently sitting in another deck
@@ -70,9 +72,13 @@ function DeckDetailPage() {
   // Either way this deck can't assume it has the card, so it's flagged the
   // same way. This is the feature that fulfills the app's actual mission —
   // see docs/PRODUCT.md#6-tracking-a-shared-cards-location--the-what-do-i-move-view.
-  const missingShared = deck.cards.filter(
-    (card) => card.isShared && card.currentDeckId !== deck.id,
-  )
+  // Doesn't apply to Planning decks — see docs/PRODUCT.md#10, they get the
+  // owned/need-to-buy view instead of shared-card tracking.
+  const missingShared = isPlanning
+    ? []
+    : deck.cards.filter(
+        (card) => card.isShared && card.currentDeckId !== deck.id,
+      )
 
   const [editing, setEditing] = useState(false)
   const [sourceText, setSourceText] = useState(deck.sourceText)
@@ -274,15 +280,29 @@ function DeckDetailPage() {
         </p>
       )}
 
+      {isPlanning && (
+        <p className="mt-4 text-sm">
+          <span className="rounded bg-green-100 px-1 py-0.5 dark:bg-green-950">
+            Green
+          </span>{' '}
+          cards are already in one of your owned decks — you don't need to buy
+          those. Everything else is marked "Need to buy."
+        </p>
+      )}
+
       {commanders.length > 0 && (
         <section className="mt-6">
           <h2 className="font-medium text-sm uppercase tracking-wide">
             Commander
           </h2>
           <ul className="mt-2 flex flex-col gap-1">
-            {commanders.map((card) => (
-              <CardLine key={card.cardId} card={card} />
-            ))}
+            {commanders.map((card) =>
+              isPlanning ? (
+                <PlanningCardLine key={card.cardId} card={card} />
+              ) : (
+                <CardLine key={card.cardId} card={card} />
+              ),
+            )}
           </ul>
         </section>
       )}
@@ -319,9 +339,13 @@ function DeckDetailPage() {
               {group.label} ({group.cards.length})
             </h3>
             <ul className="mt-1 flex flex-col gap-1">
-              {group.cards.map((card) => (
-                <CardLine key={card.cardId} card={card} />
-              ))}
+              {group.cards.map((card) =>
+                isPlanning ? (
+                  <PlanningCardLine key={card.cardId} card={card} />
+                ) : (
+                  <CardLine key={card.cardId} card={card} />
+                ),
+              )}
             </ul>
           </div>
         ))}
@@ -385,6 +409,48 @@ function MissingSharedCardRow({
           {pending ? 'Moving…' : 'Move here'}
         </Button>
       </span>
+    </li>
+  )
+}
+
+/** A Planning deck's card line: flags each card as already owned (with a
+ * link to the owning deck(s)) or needing to be bought, instead of the
+ * shared-card overlap highlighting `CardLine` shows for owned decks. See
+ * docs/PRODUCT.md#10. */
+function PlanningCardLine({ card }: { card: DeckCardEntry }) {
+  const owned = card.ownedInDecks.length > 0
+
+  return (
+    <li
+      className={cn(
+        'flex flex-wrap items-center justify-between gap-2 rounded px-1',
+        owned && 'bg-green-100 dark:bg-green-950',
+      )}
+    >
+      <CardImagePreview card={card}>
+        {card.quantity} {card.name}
+      </CardImagePreview>
+      {owned ? (
+        <span className="text-green-700 text-xs dark:text-green-400">
+          ✓ owned —{' '}
+          {card.ownedInDecks.map((ownedDeck, i) => (
+            <span key={ownedDeck.id}>
+              {i > 0 && ', '}
+              <Link
+                to="/decks/$deckId"
+                params={{ deckId: String(ownedDeck.id) }}
+                className="underline"
+              >
+                {ownedDeck.name}
+              </Link>
+            </span>
+          ))}
+        </span>
+      ) : (
+        <span className="font-medium text-destructive text-xs">
+          Need to buy
+        </span>
+      )}
     </li>
   )
 }
