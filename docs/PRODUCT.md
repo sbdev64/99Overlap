@@ -333,6 +333,25 @@ reverting to the last valid selection on blur. Both deck pickers now use
 it; `PodCombobox` itself is untouched, since its free-text behavior is
 deliberately different (see docs/PRODUCT.md's decision log).
 
+### 17. Light/dark theme toggle (M7)
+
+Found while reviewing M7's theme work: the shadcn scaffold's `.dark`
+class-based dark-mode CSS existed from the very start of the project, but
+nothing ever added that class to anything — no toggle, no
+`prefers-color-scheme` detection. Dark mode was inert the whole time.
+
+Fixed with a standard pattern: a synchronous inline `<script>` in
+`__root.tsx`'s `<head>` (not a module import — it must block before first
+paint) reads `localStorage.theme`, falling back to
+`matchMedia('(prefers-color-scheme: dark)')` on first visit, and adds
+`.dark` to `<html>` before any CSS-dependent rendering happens — avoiding
+a flash of the wrong theme. `ThemeToggle` (a sun/moon button in the
+header) flips it after that: its React state deliberately starts as
+`'light'` unconditionally (matching what the server always renders) and
+corrects itself in a `useEffect` after mount, rather than reading
+`document.documentElement`'s real class during the initial render, which
+would cause a hydration mismatch.
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
@@ -369,6 +388,7 @@ deliberately different (see docs/PRODUCT.md's decision log).
 | 2026-09-13 | Deck card grid (#67) shows the first commander's art for Partner/Background decks, not both | A list thumbnail only needs one representative image; picking a second-image variant (split thumbnail, etc.) wasn't worth the layout complexity for a personal single-user tool. The deck detail page still lists every commander individually. |
 | 2026-09-13 | History table (#69) built against `@tanstack/react-table` v9's real API (`useTable` + opt-in `tableFeatures()`), not v8's more commonly-documented `useReactTable` | Installing the package pulled in v9, whose API changed substantially from v8 (most tutorials/examples online are still v8). Fetched the actual v9 quick-start/migration docs before writing any code rather than assuming v8 patterns would work — same discipline as the Charts library scare in M6. |
 | 2026-09-13 | M7 (UI/UX) closed same-day — new `Combobox` component (#70) added alongside `PodCombobox` rather than generalizing it into one component | The two pickers have genuinely different contracts: `PodCombobox` accepts free text (a typo becomes a new pod), the deck pickers must only accept an existing option. Forcing one component to cover both would need a mode flag threaded through render logic that never actually varies per call site — two small, single-purpose components stayed simpler than one configurable one. |
+| 2026-09-13 | M7 reopened after closing, for a calendar-navigation fix, a darker/warmer theme pass, and (this row) a dark-mode toggle | User feedback: milestones shouldn't be closed until they've had a chance to review the running app, not just merged PRs — saved as a standing habit correction (see CLAUDE.md-adjacent session memory). Reviewing the theme surfaced that dark mode's CSS existed but was unreachable (no toggle, no system-preference detection) since the original scaffold — fixed alongside the other two asks rather than filed as yet another separate round-trip. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this
