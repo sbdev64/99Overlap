@@ -113,25 +113,62 @@ informational, cross-checked by eye.
       this milestone. Shipped together with a name/last-played sort control
       on the decks list. (#51)
 
-## Future milestones (not yet scheduled)
+## Improvements
 
-Noted so they aren't lost, but deliberately not ordered yet — the user
-wants to use the product through M4 before deciding what's next.
+Scoped 2026-09-13. Shipping stays postponed (see "Ship it" below) — the
+user plans to self-host on a home-server laptop in the future, not now.
+Deck classification (precon/custom/planning) is the reason: it directly
+serves the "what do I not need to buy" question for planned decks.
 
-- **UI enhancement / rework** — general UI/UX polish once more of the app
-  exists to react to. GitHub milestone created, not yet scoped.
-- **Stats & charts** — games per year/month, most-played decks, win rate,
-  etc., built on top of M4's game log.
-- **Deck metadata / collection tracker** — a second thing the user
-  currently tracks in the same Google Sheet: per-deck info beyond the
-  decklist itself (commander(s), build status/"planned" decks that don't
-  exist yet, colors, box color, sleeve color, archetype). Not scoped yet.
+- [ ] **Classify decks as Precon, Custom, or Planning** — `Deck.type`, set
+      at import, editable later. (#60)
+- [ ] **Section/filter the decks list by type** — Precon and Custom always
+      shown as separate sections; Planning behind a togglable third
+      section (off by default). Depends on #60. (#61)
+- [ ] **Planning decks flag which cards you already own** — cross-checks a
+      Planning deck's cards against every owned (precon/custom) deck,
+      variant of the existing overlap-detection logic. Depends on #60.
+      (#62)
+- [ ] **Deck metadata: box color, sleeve color, archetype, auto-derived
+      color identity** — optional/nice-to-have; the lighter version of the
+      "deck metadata / collection tracker" idea below. (#63)
+- [ ] **Keyboard shortcuts for common actions** — `/` to search, `n` to log
+      a game, `?` for a shortcuts help dialog. (#64)
+
+## Statistics
+
+Scoped 2026-09-13, supersedes the "Stats & charts" idea below. Built on
+`@tanstack/react-charts` (real, actively published, pre-1.0 — pin an exact
+version).
+
+- [ ] **Statistics dashboard: games, win rate, most-played decks/pods** —
+      new `/stats` page. (#65)
+- [ ] **Collection-level stats: color identity spread, mana curve, decks
+      gathering dust** — second, more exploratory batch of charts on the
+      same page. (#66)
+
+## UI/UX
+
+Scoped 2026-09-13 (GitHub milestone renamed from "UI enhancement /
+rework"), user's direction: "retro flat magic / wizard-like" styling.
+
+- [ ] **Redesign decks list as a card grid with commander art** — replaces
+      the current row list. (#67)
+- [ ] **Persistent header/footer + cohesive visual theme** — de-duplicates
+      the nav row currently copy-pasted across every route file, plus a
+      real color palette/typography pass. (#68)
+- [ ] **Migrate history table to TanStack Table** — sortable columns,
+      `@tanstack/react-table`. (#69)
+- [ ] **Unify deck and pod pickers into one typeable combobox** — the game
+      dialog's deck field (and `SharedCardPicker`'s) becomes typeable like
+      the pod field already is. (#70)
 
 ## Ship it (postponed, unmilestoned)
 
-Deliberately not attached to a milestone right now — more milestones are
-coming before shipping is revisited, and guessing a milestone number for
-this today isn't worth it. The issues stay open and tracked, just without a
+Deliberately not attached to a milestone right now. As of 2026-09-13 the
+plan is to self-host on a home-server laptop, but "in a close future" —
+not yet, so this stays deprioritized while Improvements/Statistics/UI-UX
+are worked through. The issues stay open and tracked, just without a
 milestone:
 
 - **Dockerfile / deployment docs** — pick and document the actual
@@ -143,4 +180,5 @@ milestone:
 ## Suggested GitHub labels
 
 `type:feature`, `type:bug`, `type:chore`, `type:docs`, `area:import`,
-`area:shared`, `area:ui`, `area:infra`, `area:history` (new, for M4).
+`area:shared`, `area:ui`, `area:infra`, `area:history`, `area:decks` (new,
+for Improvements), `area:stats` (new, for Statistics).
