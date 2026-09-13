@@ -33,7 +33,15 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { GROUP_BY_OPTIONS, type GroupBy, groupCards } from '@/lib/card-grouping'
 import { toDisplayDate } from '@/lib/date-format'
 import { cn } from '@/lib/utils'
 import { type DeckCardEntry, getDeck } from '@/server/decks'
@@ -54,6 +62,8 @@ function DeckDetailPage() {
   const commanders = deck.cards.filter((card) => card.board === 'commander')
   const mainboard = deck.cards.filter((card) => card.board === 'mainboard')
   const hasOverlap = deck.cards.some((card) => card.isOverlapping)
+  const [groupBy, setGroupBy] = useState<GroupBy>('type')
+  const mainboardGroups = groupCards(mainboard, groupBy)
   // Shared cards this deck needs that are currently sitting in another deck
   // — or, if that deck was deleted, whose location is now unknown (`null`).
   // Either way this deck can't assume it has the card, so it's flagged the
@@ -254,14 +264,43 @@ function DeckDetailPage() {
       )}
 
       <section className="mt-6">
-        <h2 className="font-medium text-sm uppercase tracking-wide">
-          Mainboard ({mainboard.length})
-        </h2>
-        <ul className="mt-2 flex flex-col gap-1">
-          {mainboard.map((card) => (
-            <CardLine key={card.cardId} card={card} />
-          ))}
-        </ul>
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium text-sm uppercase tracking-wide">
+            Mainboard ({mainboard.length})
+          </h2>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="group-by" className="text-muted-foreground text-xs">
+              Group by
+            </Label>
+            <Select
+              value={groupBy}
+              onValueChange={(value) => setGroupBy(value as GroupBy)}
+            >
+              <SelectTrigger id="group-by" className="h-8 w-40 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GROUP_BY_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {mainboardGroups.map((group) => (
+          <div key={group.label} className="mt-3">
+            <h3 className="text-muted-foreground text-xs uppercase tracking-wide">
+              {group.label} ({group.cards.length})
+            </h3>
+            <ul className="mt-1 flex flex-col gap-1">
+              {group.cards.map((card) => (
+                <CardLine key={card.cardId} card={card} />
+              ))}
+            </ul>
+          </div>
+        ))}
       </section>
     </main>
   )

@@ -68,6 +68,11 @@ export interface DeckCardEntry {
   board: TrackedBoard
   /** From Scryfall enrichment (#18); null until enriched or if not found. */
   imageUrl: string | null
+  typeLine: string | null
+  /** Comma-separated WUBRG letters, e.g. "W,U"; "" for colorless. */
+  colorIdentity: string | null
+  /** Numeric mana value. */
+  cmc: number | null
   /** True when this card also appears in at least one other deck. See
    * docs/PRODUCT.md#4-overlap-detection. */
   isOverlapping: boolean
@@ -181,6 +186,9 @@ export const getDeck = createServerFn({ method: 'GET' })
           quantity: deckCard.quantity,
           board: deckCard.board,
           imageUrl: deckCard.card.imageUrl,
+          typeLine: deckCard.card.typeLine,
+          colorIdentity: deckCard.card.colorIdentity,
+          cmc: deckCard.card.cmc,
           isOverlapping: sharedDecks.length > 1,
           isShared: deckCard.card.isShared,
           currentDeckId: deckCard.card.currentDeckId,
