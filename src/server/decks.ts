@@ -66,6 +66,8 @@ export interface DeckCardEntry {
   name: string
   quantity: number
   board: TrackedBoard
+  /** From Scryfall enrichment (#18); null until enriched or if not found. */
+  imageUrl: string | null
   /** True when this card also appears in at least one other deck. See
    * docs/PRODUCT.md#4-overlap-detection. */
   isOverlapping: boolean
@@ -178,6 +180,7 @@ export const getDeck = createServerFn({ method: 'GET' })
           name: deckCard.card.name,
           quantity: deckCard.quantity,
           board: deckCard.board,
+          imageUrl: deckCard.card.imageUrl,
           isOverlapping: sharedDecks.length > 1,
           isShared: deckCard.card.isShared,
           currentDeckId: deckCard.card.currentDeckId,
