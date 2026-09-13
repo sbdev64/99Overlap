@@ -47,6 +47,17 @@ DeckCard                   -- join table: which cards are in which deck
   cardId
   quantity
   board                    -- 'commander' | 'mainboard' (see "Boards" below)
+
+Game                       -- one row per game logged (see feature 9)
+  id
+  date                     -- user-picked date the game was played
+  deckId                   -- nullable FK -> Deck; null if that deck was later deleted
+  deckName                 -- denormalized snapshot of Deck.name at log time,
+                              kept even if the deck is renamed/deleted later
+  pod                      -- free text (which regular playgroup), autocompleted
+                              from prior entries, not a managed lookup table
+  won                      -- bool
+  createdAt / updatedAt
 ```
 
 Cards are matched **by exact name** across decks (case-insensitive, trimmed).
@@ -155,6 +166,39 @@ enrichment in feature 7 above) by parsing the type(s) before the em dash,
 e.g. "Legendary Creature — Phyrexian Angel" → Creature. Depends on feature 7
 having run first. Noted here for later; not scheduled as blocking work.
 
+### 9. Game history log (M4)
+
+Replaces the user's manual Google Sheet game log. A `/history` page lists
+every logged game (date, deck, pod, won), newest first, with add/edit/delete.
+Two purposes:
+
+1. **Cross-check for shared-card tracking.** Deck pages show "last played:
+   \<date\>" so the user can sanity-check the manually-tracked
+   `currentDeckId` against reality (e.g. "deck 3 was played most recently
+   among the decks sharing this card, so it tracks that it's there now").
+   This is purely informational — logging a game **never** writes to
+   `isShared`/`currentDeckId`. Decided against auto-linking them: a
+   backfilled historical entry (not the most recent game overall) could
+   otherwise silently make the shared-card tracking wrong, which matters
+   because the user plans to backfill years of past games from their
+   spreadsheet.
+2. **Groundwork for a future stats/charts milestone** (games per
+   year/month, most-played decks, win rate) — not built in M4 itself.
+
+`pod` (the user's regular playgroups — they play with two different regular
+groups) is a plain text field, not a managed entity: the form suggests
+previously-used values as autocomplete, but there's no separate "manage
+pods" screen. Simpler, and typos just become a distinct pod name rather
+than corrupting a shared lookup table — acceptable for a single-user tool.
+
+Deleting a `Deck` sets `Game.deckId` to null (`onDelete: 'set null'`,
+consistent with how `Card.currentDeckId` already behaves) rather than
+deleting the game history — a played game is a historical fact independent
+of whether the deck still exists in the app. `Game.deckName` is a
+denormalized snapshot of the deck's name at log time (same pattern as
+`Deck.commanderName`), so a deleted or renamed deck doesn't blank out past
+history rows.
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
@@ -176,6 +220,9 @@ having run first. Noted here for later; not scheduled as blocking work.
 | 2026-09-12 | Server functions must dynamically `import('@/db/client')` inside the handler, not at module scope | Discovered as a real bug (user hit it running the app in a browser): a top-level `import { db } from '@/db/client'` in a `createServerFn` file gets pulled into that file's client-side split and crashes on load, since `client.ts` opens `bun:sqlite` as a module-scope side effect that doesn't exist in the browser. See the convention note in CLAUDE.md. |
 | 2026-09-13 | Renamed the "staple" concept to "shared" throughout (schema column `isStaple` → `isShared`, `markStaple` → `markShared`, docs, GitHub issues #13-#17, `area:staples` label → `area:shared`) | User feedback: "staple" already means something else in MTG (a generically powerful/commonly-played card, e.g. "Sol Ring is a staple"), which collided with what this app actually tracks — a single physical card shared and moved between decks. "Shared" describes the mechanic directly. Generic English use of "staple" describing a card's power level (e.g. in the mission blurb) was left alone; only the tracked-feature name changed. |
 | 2026-09-13 | Partner/Background decks resolved via an explicit `commanderCount` field + checkbox, not further parser heuristics | Confirmed the real paste shape (two commander lines, no header) via a real example (#32). Since the parser genuinely cannot tell from the text alone whether line 2 is a second commander, the user chose explicit input over guessing: a checkbox on import/edit sets `Deck.commanderCount` (1 or 2), passed to `parseDecklist`. Closes out M1. |
+| 2026-09-13 | Milestones restructured: M3 (Polish) unchanged, M4 retargeted from "Ship it" to "History", "Ship it" issues (#22-24) kept open but unmilestoned, new "UI enhancement / rework" milestone created but unscheduled | User wants two more milestones (History, then UI rework at some undecided point) before shipping is revisited; didn't want to guess a milestone number for "Ship it" today given more milestones are coming. |
+| 2026-09-13 | Game history (`Game` entity) never writes to `isShared`/`currentDeckId` — purely informational, cross-checked by eye | Considered auto-updating a shared card's location from the most-recently-logged game among decks that share it, but rejected: the user plans to backfill years of historical games from a spreadsheet, and a backfilled (non-most-recent) entry could silently overwrite correct manual tracking. |
+| 2026-09-13 | `Game.pod` is free text with autocomplete, not a managed Pod entity | Simpler for a single-user tool; no "manage pods" screen needed. Accepted trade-off: a typo creates a new distinct pod name rather than being caught by a lookup table. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this

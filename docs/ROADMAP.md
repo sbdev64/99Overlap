@@ -84,15 +84,20 @@ alongside the shared-card location tracking from M2; (2) lay groundwork for
 a later stats/charts milestone (see "Future milestones" below — not built
 in M4 itself).
 
-Design still being discussed (2026-09-13) — exact schema and issue list to
-follow once resolved:
-- How "pod" (the user's regular playgroups) is represented — free text with
-  autocomplete vs. a small managed list.
-- Whether logging a game should ever automatically update a shared card's
-  `currentDeckId`, or stay a read-only log that's purely informational
-  alongside the existing manual tracking. Leaning toward the latter, since
-  auto-updating from a backfilled historical entry (not the most recent
-  game overall) could silently make the shared-card tracking wrong.
+Design decided (2026-09-13, see docs/PRODUCT.md#9-game-history-log-m4 and
+its decision log): `pod` is free text with autocomplete, no managed lookup
+table; logging a game never writes to `isShared`/`currentDeckId` — purely
+informational, cross-checked by eye.
+
+- [ ] **Game log schema + add/list** — `Game` table (date, deckId, deckName
+      snapshot, pod, won); `/history` page listing games newest first, with
+      an "add game" form (date, deck select, pod text input with
+      autocomplete, won checkbox).
+- [ ] **Edit and delete a game entry** — same form pre-filled; delete with
+      confirmation (matches the existing deck-delete `AlertDialog` pattern).
+- [ ] **Show "last played" on deck pages** — derived from `MAX(date)` over
+      this deck's games; the actual cross-check feature that's the point of
+      this milestone.
 
 ## Future milestones (not yet scheduled)
 
