@@ -1,4 +1,5 @@
 import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
+import { GlobalHotkeys } from '@/components/hotkeys'
 
 import appCss from '../styles.css?url'
 
@@ -34,6 +35,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <GlobalHotkeys />
 
         <Scripts />
       </body>

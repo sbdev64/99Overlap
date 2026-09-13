@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { DatePicker } from '@/components/date-picker'
 import { PodCombobox } from '@/components/pod-combobox'
 import {
@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useHotkey } from '@/hooks/use-hotkey'
 import { toDisplayDate, toIsoDate } from '@/lib/date-format'
 import { createGame } from '@/server/create-game'
 import { type DeckSummary, listDecks } from '@/server/decks'
@@ -53,6 +54,8 @@ function HistoryPage() {
     () => Array.from(new Set(games.map((game) => game.pod))).sort(),
     [games],
   )
+  const addGameTriggerRef = useRef<HTMLButtonElement>(null)
+  useHotkey('n', () => addGameTriggerRef.current?.click())
 
   return (
     <main>
@@ -76,7 +79,11 @@ function HistoryPage() {
 
       <GameDialog
         trigger={
-          <Button className="mt-4" disabled={decks.length === 0}>
+          <Button
+            ref={addGameTriggerRef}
+            className="mt-4"
+            disabled={decks.length === 0}
+          >
             Add game
           </Button>
         }
