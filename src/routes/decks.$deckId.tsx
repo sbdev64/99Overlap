@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,9 @@ function DeckDetailPage() {
 
   const [editing, setEditing] = useState(false)
   const [sourceText, setSourceText] = useState(deck.sourceText)
+  const [hasTwoCommanders, setHasTwoCommanders] = useState(
+    deck.commanderCount === 2,
+  )
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -68,7 +72,13 @@ function DeckDetailPage() {
     setPending(true)
     setError(null)
     try {
-      await updateDeck({ data: { deckId: deck.id, sourceText } })
+      await updateDeck({
+        data: {
+          deckId: deck.id,
+          sourceText,
+          commanderCount: hasTwoCommanders ? 2 : 1,
+        },
+      })
       setEditing(false)
       await router.invalidate()
     } catch (err) {
@@ -111,6 +121,7 @@ function DeckDetailPage() {
               variant="outline"
               onClick={() => {
                 setSourceText(deck.sourceText)
+                setHasTwoCommanders(deck.commanderCount === 2)
                 setError(null)
                 setEditing(true)
               }}
@@ -178,6 +189,19 @@ function DeckDetailPage() {
             rows={12}
             required
           />
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="edit-two-commanders"
+              checked={hasTwoCommanders}
+              onCheckedChange={(checked) =>
+                setHasTwoCommanders(checked === true)
+              }
+            />
+            <Label htmlFor="edit-two-commanders" className="font-normal">
+              This deck has two commanders (Partner/Background) — the first two
+              lines of the paste are both commanders
+            </Label>
+          </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={pending}>
               {pending ? 'Saving…' : 'Save changes'}

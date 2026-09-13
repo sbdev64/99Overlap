@@ -31,6 +31,7 @@ Deck
   commanderName(s)        -- display only, from the parsed decklist
   colorIdentity            -- derived, display only
   sourceText               -- last raw pasted decklist (kept for re-import/diff)
+  commanderCount           -- 1, or 2 for Partner/Background decks (see below)
   createdAt / updatedAt
 
 Card                       -- one row per unique card NAME, shared across decks
@@ -64,10 +65,10 @@ decide when building the parser; note the final call here once made).
 
 ### 1. Import a deck
 
-User pastes a Moxfield text export into a form. The app parses it into a
-commander + list of (quantity, card name) pairs, creates/reuses `Card` rows
-by name, creates a `Deck` row, and populates `DeckCard`. The raw pasted text
-is stored on the deck so future re-imports can diff against it.
+User pastes a Moxfield text export into a form. The app parses it into
+commander(s) + a list of (quantity, card name) pairs, creates/reuses `Card`
+rows by name, creates a `Deck` row, and populates `DeckCard`. The raw pasted
+text is stored on the deck so future re-imports can diff against it.
 
 Expected input format (the user's actual Moxfield copy-paste): a flat list
 with no section headers, where **the first card line is always the
@@ -81,9 +82,20 @@ commander**:
 
 The parser (`src/lib/decklist-parser.ts`) also tolerates an explicit
 `Commander` header section, if one is ever present, in which case that takes
-priority over the first-card rule. See the decision log for how this was
-confirmed and its known limitation (Partner/Background two-commander decks
-aren't handled by the first-card rule yet).
+priority over the first-card rule.
+
+#### 1b. Partner/Background (two-commander) decks
+
+Partner and Background decks paste the same way, just with **two**
+commander lines up front (confirmed against a real example: Kediss,
+Emberclaw Familiar / Malcolm, Keen-Eyed Navigator). There's no way to tell
+from the text alone whether line 2 is a second commander or the first
+mainboard card, so this is resolved with explicit user input rather than
+guessing: a "This deck has two commanders (Partner/Background)" checkbox on
+both the import and edit forms sets `Deck.commanderCount` (1 or 2), which is
+passed to the parser so it knows how many leading lines to treat as
+commanders. Defaults to 1, so ordinary single-commander decks are
+unaffected. See the decision log.
 
 ### 2. Update a deck
 
@@ -163,6 +175,7 @@ having run first. Noted here for later; not scheduled as blocking work.
 | 2026-09-12 | Partner/Background (two-commander) decks not yet handled by the decklist parser | User wasn't sure whether any of their decks use two commanders; shipping the single-commander (first-card) rule now and deferring this rather than guessing at a convention with no real example to check against. Revisit if a real deck needs it. |
 | 2026-09-12 | Server functions must dynamically `import('@/db/client')` inside the handler, not at module scope | Discovered as a real bug (user hit it running the app in a browser): a top-level `import { db } from '@/db/client'` in a `createServerFn` file gets pulled into that file's client-side split and crashes on load, since `client.ts` opens `bun:sqlite` as a module-scope side effect that doesn't exist in the browser. See the convention note in CLAUDE.md. |
 | 2026-09-13 | Renamed the "staple" concept to "shared" throughout (schema column `isStaple` → `isShared`, `markStaple` → `markShared`, docs, GitHub issues #13-#17, `area:staples` label → `area:shared`) | User feedback: "staple" already means something else in MTG (a generically powerful/commonly-played card, e.g. "Sol Ring is a staple"), which collided with what this app actually tracks — a single physical card shared and moved between decks. "Shared" describes the mechanic directly. Generic English use of "staple" describing a card's power level (e.g. in the mission blurb) was left alone; only the tracked-feature name changed. |
+| 2026-09-13 | Partner/Background decks resolved via an explicit `commanderCount` field + checkbox, not further parser heuristics | Confirmed the real paste shape (two commander lines, no header) via a real example (#32). Since the parser genuinely cannot tell from the text alone whether line 2 is a second commander, the user chose explicit input over guessing: a checkbox on import/edit sets `Deck.commanderCount` (1 or 2), passed to `parseDecklist`. Closes out M1. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this

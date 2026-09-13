@@ -14,19 +14,24 @@
  *   1 Aarakocra Sneak (CLB) 54
  *   1 Aether Tunnel (M19) 43
  *
+ * Partner/Background decks paste the same way, just with **two** commander
+ * lines up front (confirmed against a real example: Kediss, Emberclaw
+ * Familiar / Malcolm, Keen-Eyed Navigator, both first, no header). There's
+ * no way to tell from the text alone whether line 2 is a second commander
+ * or the first mainboard card, so the caller must say how many commander
+ * lines to expect via `commanderCount` (see docs/PRODUCT.md#5b and the
+ * decision log) — the deck import/edit UI exposes this as a checkbox.
+ *
  * Some export modes (and other sites) instead use standalone header lines
  * (`Commander`, `Deck`/`Mainboard`, `Sideboard`, `Maybeboard`, `Companion`,
  * case-insensitive, optional trailing colon) to mark sections explicitly —
- * this is also supported, and takes priority whenever a `Commander` header
- * is present anywhere in the input. See the decision log in docs/PRODUCT.md.
+ * this is also supported, and takes priority over `commanderCount` whenever
+ * a `Commander` header is present anywhere in the input (every line under
+ * it counts as a commander, however many there are).
  *
  * Card lines are `<qty>[x] <name>[ (SETCODE) collector#]` — the set
  * code/collector number suffix, when present, is stripped since we only
  * track cards by name.
- *
- * Known limitation: the "first card is the commander" rule assumes a single
- * commander. Partner/Background decks (two commanders, no header to mark
- * where the commander block ends) aren't handled yet — see roadmap.
  */
 
 export type TrackedBoard = 'commander' | 'mainboard'
@@ -44,6 +49,12 @@ export interface ParsedDecklist {
   commanderNames: string[]
   /** Lines that couldn't be parsed as a card line. */
   warnings: string[]
+}
+
+export interface ParseDecklistOptions {
+  /** How many leading card lines are commanders when there's no explicit
+   * `Commander` header (1, or 2 for Partner/Background). Defaults to 1. */
+  commanderCount?: number
 }
 
 type IgnoredBoard = 'sideboard' | 'maybeboard' | 'companion' | 'tokens'
@@ -75,7 +86,12 @@ function normalizeHeader(line: string) {
   return line.toLowerCase().replace(/:$/, '')
 }
 
-export function parseDecklist(text: string): ParsedDecklist {
+export function parseDecklist(
+  text: string,
+  options: ParseDecklistOptions = {},
+): ParsedDecklist {
+  const commanderCount = options.commanderCount ?? 1
+
   const entries: ParsedCardEntry[] = []
   const commanderNames: string[] = []
   const warnings: string[] = []
@@ -86,7 +102,7 @@ export function parseDecklist(text: string): ParsedDecklist {
   )
 
   let currentSection: TrackedBoard | IgnoredBoard = 'mainboard'
-  let isFirstCard = true
+  let commanderLinesSeen = 0
 
   for (const rawLine of lines) {
     const line = rawLine.trim()
@@ -115,11 +131,16 @@ export function parseDecklist(text: string): ParsedDecklist {
     const name = (setMatch ? setMatch[1] : rest).trim()
     if (!name) continue
 
-    // With no explicit "Commander" header anywhere in the input, the very
-    // first card line in the whole paste is the commander (see module doc).
+    // With no explicit "Commander" header anywhere in the input, the first
+    // `commanderCount` card lines in the whole paste are the commander(s)
+    // (see module doc).
     const section =
-      !hasExplicitCommanderHeader && isFirstCard ? 'commander' : currentSection
-    isFirstCard = false
+      !hasExplicitCommanderHeader && commanderLinesSeen < commanderCount
+        ? 'commander'
+        : currentSection
+    if (!hasExplicitCommanderHeader && section === 'commander') {
+      commanderLinesSeen += 1
+    }
 
     if (section === 'commander') {
       commanderNames.push(name)

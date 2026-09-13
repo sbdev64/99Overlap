@@ -9,6 +9,9 @@ import { insertDeckCards } from './deck-card-sync'
 const updateDeckSchema = z.object({
   deckId: z.coerce.number().int().positive(),
   sourceText: z.string().trim().min(1, 'Paste a decklist first'),
+  // 2 for Partner/Background decks (two commander lines, no header). See
+  // src/lib/decklist-parser.ts.
+  commanderCount: z.union([z.literal(1), z.literal(2)]).default(1),
 })
 
 export interface UpdateDeckResult {
@@ -27,7 +30,9 @@ export const updateDeck = createServerFn({ method: 'POST' })
     // see the comment in src/server/import-deck.ts.
     const { db } = await import('@/db/client')
 
-    const parsed = parseDecklist(data.sourceText)
+    const parsed = parseDecklist(data.sourceText, {
+      commanderCount: data.commanderCount,
+    })
 
     return db.transaction(async (tx) => {
       const existing = await tx.query.decks.findFirst({
@@ -48,6 +53,7 @@ export const updateDeck = createServerFn({ method: 'POST' })
         .set({
           commanderName: parsed.commanderNames.join(', ') || null,
           sourceText: data.sourceText,
+          commanderCount: data.commanderCount,
           updatedAt: new Date(),
         })
         .where(eq(decks.id, data.deckId))

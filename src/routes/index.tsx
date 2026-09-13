@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/')({ component: Home })
 function Home() {
   const [name, setName] = useState('')
   const [sourceText, setSourceText] = useState('')
+  const [hasTwoCommanders, setHasTwoCommanders] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ImportDeckResult | null>(null)
@@ -21,10 +23,17 @@ function Home() {
     setError(null)
     setResult(null)
     try {
-      const imported = await importDeck({ data: { name, sourceText } })
+      const imported = await importDeck({
+        data: {
+          name,
+          sourceText,
+          commanderCount: hasTwoCommanders ? 2 : 1,
+        },
+      })
       setResult(imported)
       setName('')
       setSourceText('')
+      setHasTwoCommanders(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to import deck')
     } finally {
@@ -68,6 +77,18 @@ function Home() {
             rows={12}
             required
           />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="two-commanders"
+            checked={hasTwoCommanders}
+            onCheckedChange={(checked) => setHasTwoCommanders(checked === true)}
+          />
+          <Label htmlFor="two-commanders" className="font-normal">
+            This deck has two commanders (Partner/Background) — the first two
+            lines of the paste are both commanders
+          </Label>
         </div>
 
         <Button type="submit" disabled={pending} className="self-start">
