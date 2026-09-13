@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { cards } from '@/db/schema'
 import type { Db } from '@/db/types'
+import { COLOR_ORDER } from '@/lib/colors'
 
 // Scryfall's collection endpoint accepts up to 75 identifiers per request
 // and is the recommended way to look up many cards at once — far fewer
@@ -10,8 +11,6 @@ const BATCH_SIZE = 75
 // Only relevant when more than one batch is needed; still polite per
 // Scryfall's rate-limiting guidance (~50-100ms between requests).
 const BATCH_DELAY_MS = 100
-// WUBRG order, matching how Scryfall itself orders color_identity arrays.
-const COLOR_ORDER = ['W', 'U', 'B', 'R', 'G']
 
 interface ScryfallCardFace {
   mana_cost?: string
@@ -60,11 +59,21 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// Scryfall's collection endpoint can return a card under its own canonical
+// spelling even when the identifier we sent differs in punctuation only
+// (e.g. we send "Atraxa, Praetor's Voice", it returns "Atraxa, Praetors'
+// Voice"). Stripping everything but letters/digits before matching makes
+// the lookup robust to that instead of silently missing the card.
+function normalizeForMatch(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 /**
  * Looks up `names` on Scryfall (batched, name-based) and returns whatever
- * was found, keyed by lowercased name. Best-effort: a network failure logs
- * a warning and returns whatever batches succeeded rather than throwing —
- * enrichment is a nice-to-have and must never block an import.
+ * was found, keyed by normalized name (see normalizeForMatch). Best-effort:
+ * a network failure logs a warning and returns whatever batches succeeded
+ * rather than throwing — enrichment is a nice-to-have and must never block
+ * an import.
  */
 async function fetchEnrichment(
   names: string[],
@@ -89,7 +98,7 @@ async function fetchEnrichment(
       }
       const body: ScryfallCollectionResponse = await res.json()
       for (const card of body.data) {
-        found.set(card.name.toLowerCase(), toEnrichment(card))
+        found.set(normalizeForMatch(card.name), toEnrichment(card))
       }
     } catch (err) {
       console.warn('Scryfall enrichment batch failed:', err)
@@ -117,7 +126,7 @@ export async function enrichCards(
   if (enrichmentByName.size === 0) return
 
   for (const target of targets) {
-    const enrichment = enrichmentByName.get(target.name.toLowerCase())
+    const enrichment = enrichmentByName.get(normalizeForMatch(target.name))
     if (!enrichment) continue
 
     await db.update(cards).set(enrichment).where(eq(cards.id, target.id))

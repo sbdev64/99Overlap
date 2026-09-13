@@ -3,6 +3,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { cards as cardsTable, deckCards, decks, games } from '@/db/schema'
+import { mergeColorIdentities } from '@/lib/colors'
 import type { DeckType } from '@/lib/deck-type'
 import type { TrackedBoard } from '@/lib/decklist-parser'
 import { enrichCards } from './scryfall-enrich'
@@ -100,6 +101,12 @@ export interface DeckDetail {
   sourceText: string
   /** 1, or 2 for Partner/Background decks. See src/lib/decklist-parser.ts. */
   commanderCount: number
+  /** Auto-derived from the commander(s)' enriched color identity; null
+   * until they're enriched. See docs/PRODUCT.md#10. */
+  colorIdentity: string | null
+  boxColor: string | null
+  sleeveColor: string | null
+  archetype: string | null
   cards: DeckCardEntry[]
   /** MAX(date) over this deck's logged games, or null if never played. See
    * docs/PRODUCT.md#9-game-history-log-m4 / roadmap issue #51. */
@@ -145,6 +152,29 @@ export const getDeck = createServerFn({ method: 'GET' })
       for (const deckCard of deck.deckCards) {
         const updated = refreshedById.get(deckCard.card.id)
         if (updated) deckCard.card = updated
+      }
+    }
+
+    // Auto-derives Deck.colorIdentity from the commander(s)' enriched
+    // colorIdentity — same lazy-persist pattern as the enrichment backfill
+    // above. Skipped (left as-is) until every commander is enriched.
+    // See docs/PRODUCT.md#10.
+    const commanderCards = deck.deckCards.filter(
+      (deckCard) => deckCard.board === 'commander',
+    )
+    if (
+      commanderCards.length > 0 &&
+      commanderCards.every((deckCard) => deckCard.card.colorIdentity !== null)
+    ) {
+      const computedColorIdentity = mergeColorIdentities(
+        commanderCards.map((deckCard) => deckCard.card.colorIdentity as string),
+      )
+      if (computedColorIdentity !== deck.colorIdentity) {
+        await db
+          .update(decks)
+          .set({ colorIdentity: computedColorIdentity })
+          .where(eq(decks.id, deck.id))
+        deck.colorIdentity = computedColorIdentity
       }
     }
 
@@ -231,6 +261,10 @@ export const getDeck = createServerFn({ method: 'GET' })
       commanderName: deck.commanderName,
       sourceText: deck.sourceText,
       commanderCount: deck.commanderCount,
+      colorIdentity: deck.colorIdentity,
+      boxColor: deck.boxColor,
+      sleeveColor: deck.sleeveColor,
+      archetype: deck.archetype,
       cards,
       lastPlayedDate: lastPlayedRow?.lastPlayedDate ?? null,
     }

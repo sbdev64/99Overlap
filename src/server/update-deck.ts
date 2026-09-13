@@ -8,6 +8,13 @@ import { parseDecklist } from '@/lib/decklist-parser'
 import { insertDeckCards } from './deck-card-sync'
 import { enrichCards } from './scryfall-enrich'
 
+// Empty string means "not set" — the edit form always sends a string, so
+// this normalizes a cleared field back to null rather than storing "".
+const optionalText = z
+  .string()
+  .trim()
+  .transform((value) => value || null)
+
 const updateDeckSchema = z.object({
   deckId: z.coerce.number().int().positive(),
   sourceText: z.string().trim().min(1, 'Paste a decklist first'),
@@ -15,6 +22,9 @@ const updateDeckSchema = z.object({
   // src/lib/decklist-parser.ts.
   commanderCount: z.union([z.literal(1), z.literal(2)]).default(1),
   type: z.enum(DECK_TYPES),
+  boxColor: optionalText,
+  sleeveColor: optionalText,
+  archetype: optionalText,
 })
 
 export interface UpdateDeckResult {
@@ -58,6 +68,9 @@ export const updateDeck = createServerFn({ method: 'POST' })
           commanderName: parsed.commanderNames.join(', ') || null,
           sourceText: data.sourceText,
           commanderCount: data.commanderCount,
+          boxColor: data.boxColor,
+          sleeveColor: data.sleeveColor,
+          archetype: data.archetype,
           updatedAt: new Date(),
         })
         .where(eq(decks.id, data.deckId))
