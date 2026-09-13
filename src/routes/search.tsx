@@ -36,6 +36,7 @@ function SearchPage() {
       </p>
 
       <Input
+        id="search-input"
         autoFocus
         value={query}
         onChange={(e) => setQuery(e.target.value)}
