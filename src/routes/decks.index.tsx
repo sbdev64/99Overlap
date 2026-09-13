@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { ImageOff } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Label } from '@/components/ui/label'
 import {
@@ -67,7 +68,7 @@ function DecksPage() {
   )
 
   return (
-    <main>
+    <main style={{ '--main-width': '72rem' } as React.CSSProperties}>
       <div className="flex items-center justify-between">
         <h1 className="font-display font-semibold text-2xl">Decks</h1>
         <Link to="/" className="text-sm underline">
@@ -142,30 +143,51 @@ function DeckSection({
       {decks.length === 0 ? (
         <p className="mt-2 text-muted-foreground text-sm">No decks here yet.</p>
       ) : (
-        <ul className="mt-2 flex flex-col gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {decks.map((deck) => (
-            <li key={deck.id}>
-              <Link
-                to="/decks/$deckId"
-                params={{ deckId: String(deck.id) }}
-                className="block rounded-md border border-border p-4 hover:bg-accent"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="font-medium">{deck.name}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {deck.lastPlayedDate
-                      ? `Last played ${toDisplayDate(deck.lastPlayedDate)}`
-                      : 'Never played'}
-                  </p>
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  {deck.commanderName ?? 'No commander recorded'}
-                </p>
-              </Link>
-            </li>
+            <DeckCard key={deck.id} deck={deck} />
           ))}
-        </ul>
+        </div>
       )}
     </section>
+  )
+}
+
+function DeckCard({ deck }: { deck: DeckSummary }) {
+  return (
+    <Link
+      to="/decks/$deckId"
+      params={{ deckId: String(deck.id) }}
+      className="group flex flex-col overflow-hidden rounded-lg border border-border transition-colors hover:border-primary"
+    >
+      <div className="relative aspect-5/7 w-full overflow-hidden bg-muted">
+        {deck.commanderImageUrl ? (
+          <img
+            src={deck.commanderImageUrl}
+            alt={deck.commanderName ?? deck.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <ImageOff
+              className="size-8 text-muted-foreground"
+              aria-hidden="true"
+            />
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-0.5 p-2">
+        <p className="truncate font-medium text-sm">{deck.name}</p>
+        <p className="truncate text-muted-foreground text-xs">
+          {deck.commanderName ?? 'No commander recorded'}
+        </p>
+        <p className="text-muted-foreground text-xs">
+          {deck.lastPlayedDate
+            ? `Last played ${toDisplayDate(deck.lastPlayedDate)}`
+            : 'Never played'}
+        </p>
+      </div>
+    </Link>
   )
 }

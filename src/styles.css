@@ -93,7 +93,9 @@
 }
 
 main {
-  width: min(42rem, calc(100% - 2rem));
+  /* Individual pages can widen this via an inline `--main-width` custom
+   * property (e.g. a card grid) — see src/routes/decks.index.tsx. */
+  width: min(var(--main-width, 42rem), calc(100% - 2rem));
   margin: 2.5rem auto;
   flex: 1 0 auto;
 }

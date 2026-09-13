@@ -293,6 +293,22 @@ above the footer as the one deliberately "wizard-like" flourish. Kept
 flat and minimal rather than skeuomorphic per the issue's explicit
 constraint.
 
+### 14. Deck list as a card grid (M7)
+
+The decks list renders each deck as a card (image + name + commander +
+last-played) in a responsive grid, not a text row — `DeckSummary` now
+carries `commanderImageUrl` (the first commander's Scryfall art, from
+`listDecks`; for Partner/Background decks, whichever commander card has
+the lower `id`, a fine simplification for a list thumbnail). Falls back
+to a plain `ImageOff` icon tile — never a broken `<img>` — when the
+commander hasn't been enriched yet (#18) or wasn't found on Scryfall.
+
+The page widens itself beyond the app's normal ~42rem content column via
+an inline `--main-width` CSS custom property the shared `main` rule reads
+(`min(var(--main-width, 42rem), 100% - 2rem)`) — a page-local override
+point other wide pages can reuse later instead of duplicating the whole
+layout rule.
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
@@ -326,6 +342,7 @@ constraint.
 | 2026-09-13 | Statistics dashboard (#65) uses `@tanstack/charts` + its `/react` subpath, not the separately-published `@tanstack/react-charts` package | Initially installed `@tanstack/react-charts` since it matched the name from earlier planning, but its bundled types have no usage examples and no README. Fetched the actual TanStack Charts docs (quick-start, bar/line examples) and confirmed the current, documented React entry point is `@tanstack/charts/react` — a subpath of the core grammar-of-graphics package, not the older same-org package. Swapped before writing any chart code. Verified real SSR output (correct SVG geometry matching aggregated data) before considering the integration trustworthy, given the library is pre-1.0 and internally quite complex (dozens of composable mark/scale/transform modules). |
 | 2026-09-13 | M6 (Statistics) closed same-day — collection-level stats (#66) scoped to owned (precon/custom) decks only, "gathering dust" rendered as a plain list rather than a chart | Planning decks aren't physically built, so counting them toward color identity spread or mana curve would misrepresent the actual collection — same exclusion logic as feature 10's already-owned check. "Gathering dust" is a ranking of decks, not really chart-shaped data (dates and deck links matter more than a bar's height), so it's a plain list with exact last-played dates, matching the issue's explicit "surfaced as a simple list" suggestion. |
 | 2026-09-13 | Header nav (#68) lists every page explicitly (Import/Decks/Search/Shared/History/Statistics), not just a subset | User explicitly asked to "be able to access every page easily" while scoping M7 — the old per-page duplicated nav rows were also inconsistent about which links each page included (e.g. `/` never linked to itself). One shared header removes that drift entirely. |
+| 2026-09-13 | Deck card grid (#67) shows the first commander's art for Partner/Background decks, not both | A list thumbnail only needs one representative image; picking a second-image variant (split thumbnail, etc.) wasn't worth the layout complexity for a personal single-user tool. The deck detail page still lists every commander individually. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this

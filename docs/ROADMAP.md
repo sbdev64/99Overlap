@@ -160,8 +160,8 @@ package; pre-1.0, pinned to 0.18.0).
 Scoped 2026-09-13 (GitHub milestone renamed from "UI enhancement /
 rework"), user's direction: "retro flat magic / wizard-like" styling.
 
-- [ ] **Redesign decks list as a card grid with commander art** — replaces
-      the current row list. (#67)
+- [x] **Redesign decks list as a card grid with commander art** — replaces
+      the row list; a `--main-width` override widens just this page. (#67)
 - [x] **Persistent header/footer + cohesive visual theme** — de-duplicates
       the nav row currently copy-pasted across every route file (now links
       every page from one place, per explicit user request), plus a real
