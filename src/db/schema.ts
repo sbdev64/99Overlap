@@ -1,5 +1,11 @@
 import { relations } from 'drizzle-orm'
-import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import {
+  integer,
+  primaryKey,
+  real,
+  sqliteTable,
+  text,
+} from 'drizzle-orm/sqlite-core'
 
 /**
  * A saved Commander deck. See docs/PRODUCT.md#core-domain-model.
@@ -37,7 +43,13 @@ export const cards = sqliteTable('cards', {
   // Nullable fields filled in later by Scryfall enrichment (docs/PRODUCT.md#7).
   scryfallId: text('scryfall_id'),
   manaCost: text('mana_cost'),
+  // Numeric mana value (Scryfall's `cmc`) — needed for the by-mana-value
+  // grouping in docs/PRODUCT.md#8, not derivable from the manaCost symbol
+  // string alone.
+  cmc: real('cmc'),
   typeLine: text('type_line'),
+  // Comma-separated WUBRG letters in color order, e.g. "W,U"; empty string
+  // for colorless. From Scryfall's `color_identity` array.
   colorIdentity: text('color_identity'),
   imageUrl: text('image_url'),
   // Shared-card tracking (docs/PRODUCT.md#5 and #6): the user owns exactly

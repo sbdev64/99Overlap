@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { deckCards, decks } from '@/db/schema'
 import { parseDecklist } from '@/lib/decklist-parser'
 import { insertDeckCards } from './deck-card-sync'
+import { enrichCards } from './scryfall-enrich'
 
 const updateDeckSchema = z.object({
   deckId: z.coerce.number().int().positive(),
@@ -34,7 +35,7 @@ export const updateDeck = createServerFn({ method: 'POST' })
       commanderCount: data.commanderCount,
     })
 
-    return db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const existing = await tx.query.decks.findFirst({
         where: eq(decks.id, data.deckId),
       })
@@ -59,7 +60,7 @@ export const updateDeck = createServerFn({ method: 'POST' })
         .where(eq(decks.id, data.deckId))
         .returning()
 
-      const { cardCount, newCardCount } = await insertDeckCards(
+      const { cardCount, newCardCount, newCards } = await insertDeckCards(
         tx,
         deck.id,
         parsed.entries,
@@ -71,7 +72,15 @@ export const updateDeck = createServerFn({ method: 'POST' })
         commanderName: deck.commanderName,
         cardCount,
         newCardCount,
+        newCards,
         warnings: parsed.warnings,
       }
     })
+
+    // Outside the transaction — this makes network calls, which shouldn't
+    // hold the SQLite write lock open. Best-effort: see enrichCards.
+    await enrichCards(db, result.newCards)
+
+    const { newCards, ...response } = result
+    return response
   })
