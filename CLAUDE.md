@@ -56,6 +56,9 @@ Commit/branch/PR conventions: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Status
 
-M0 and M1 (paste-import, parser, list/detail pages, overlap detection,
-edit/delete) are done end-to-end. M2 (shared-card tracking) is underway. See
-[docs/ROADMAP.md](docs/ROADMAP.md) for what's left.
+M0-M4 are done: paste-import, overlap detection, shared-card location
+tracking, game history, and polish (Scryfall enrichment, card images,
+cross-deck search, all-shared-cards overview, deck-view grouping). Next
+milestone not yet picked. See [docs/ROADMAP.md](docs/ROADMAP.md) for what's
+left (a handful of unmilestoned "ship it" issues, plus unscheduled future
+milestones).

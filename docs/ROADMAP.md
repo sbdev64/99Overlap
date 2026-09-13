@@ -60,24 +60,31 @@ Goal: mark a card as shared and always know what to physically move.
       checkbox on import/edit tells the parser how many leading lines are
       commanders, since it can't tell from the text alone. Closed out M1.
 
-## M3 — Polish
+## M3 — Polish (closed 2026-09-13)
 
-- [ ] **Scryfall enrichment** — background/on-import lookup filling in
+- [x] **Scryfall enrichment** — background/on-import lookup filling in
       `scryfallId`, mana cost, a numeric mana value (`cmc`), type line, color
-      identity, image URL; rate-limited per Scryfall's guidance.
-- [ ] **Card images in deck view** — use enrichment data once available.
-- [ ] **Search/filter across decks** — find a card by name across all saved
-      decks (useful before even opening a specific deck).
-- [ ] **All-shared-cards overview page** — one place listing every shared
-      card and its current deck, independent of any single deck view.
-- [ ] **Group/sort cards by type, color identity, or mana value in deck
+      identity, image URL; rate-limited per Scryfall's guidance. Also
+      lazily backfills any deck's cards imported before this shipped, the
+      first time that deck's page is viewed. (#18)
+- [x] **Card images in deck view** — Moxfield-style hover preview using
+      enrichment data; falls back to plain text when a card has no image.
+      (#19)
+- [x] **Search/filter across decks** — `/search` page finds a card by
+      (partial) name across all saved decks and shows which deck(s) contain
+      it. (#20)
+- [x] **All-shared-cards overview page** — `/shared` page listing every
+      shared card, its current deck, and which other decks also need it;
+      flags "location unknown" the same way the per-deck view does. (#21)
+- [x] **Group/sort cards by type, color identity, or mana value in deck
       view** (Moxfield-like) — a control to switch the deck card list
       between three groupings: by primary type (default; Creature,
       Planeswalker, Instant, Sorcery, Artifact, Enchantment, Land, parsed
       from `typeLine`), by color identity, or by mana value, ascending.
-      Scheduled last since it depends on Scryfall enrichment above for
+      Shipped last since it depended on Scryfall enrichment above for
       `typeLine`/`colorIdentity`/`cmc`. See
       docs/PRODUCT.md#8-card-grouping-and-sort-in-deck-view-m3-moxfield-like.
+      (#27)
 
 ## M4 — History (closed 2026-09-13)
 
