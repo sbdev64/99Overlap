@@ -47,6 +47,15 @@ function DeckDetailPage() {
   const commanders = deck.cards.filter((card) => card.board === 'commander')
   const mainboard = deck.cards.filter((card) => card.board === 'mainboard')
   const hasOverlap = deck.cards.some((card) => card.isOverlapping)
+  // Shared cards this deck needs that are currently sitting in another deck.
+  // This is the feature that fulfills the app's actual mission — see
+  // docs/PRODUCT.md#6-tracking-a-shared-cards-location--the-what-do-i-move-view.
+  const missingShared = deck.cards.filter(
+    (card) =>
+      card.isShared &&
+      card.currentDeckId !== null &&
+      card.currentDeckId !== deck.id,
+  )
 
   const [editing, setEditing] = useState(false)
   const [sourceText, setSourceText] = useState(deck.sourceText)
@@ -143,6 +152,29 @@ function DeckDetailPage() {
           </div>
         )}
       </div>
+
+      {missingShared.length > 0 && (
+        <section className="mt-4 rounded-md border-2 border-amber-500 bg-amber-50 p-4 dark:bg-amber-950">
+          <h2 className="font-semibold">⚠ Missing shared cards</h2>
+          <p className="text-muted-foreground text-sm">
+            Grab these from where they currently are before you play this deck.
+          </p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {missingShared.map((card) => (
+              <li key={card.cardId}>
+                {card.name} — currently in{' '}
+                <Link
+                  to="/decks/$deckId"
+                  params={{ deckId: String(card.currentDeckId) }}
+                  className="font-medium underline"
+                >
+                  {card.currentDeckName}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {editing && (
         <form className="mt-4 flex flex-col gap-2" onSubmit={handleSave}>
