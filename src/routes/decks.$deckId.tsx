@@ -27,6 +27,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toDisplayDate } from '@/lib/date-format'
@@ -323,7 +328,7 @@ function MissingSharedCardRow({
 
 function CardLine({ card }: { card: DeckCardEntry }) {
   const label = (
-    <>
+    <CardImagePreview card={card}>
       {card.quantity} {card.name}
       {card.isShared && (
         <span
@@ -338,7 +343,7 @@ function CardLine({ card }: { card: DeckCardEntry }) {
             : 'location unknown'}
         </span>
       )}
-    </>
+    </CardImagePreview>
   )
 
   // Once a card is shared, keep it clickable (to unmark or update its
@@ -353,6 +358,37 @@ function CardLine({ card }: { card: DeckCardEntry }) {
     <li>
       <SharedCardPicker card={card} label={label} />
     </li>
+  )
+}
+
+/** Moxfield-style hover preview: shows the card's Scryfall image next to its
+ * name. Falls back to plain text when enrichment hasn't found an image yet
+ * (or the card was never found on Scryfall) — see docs/PRODUCT.md#7. */
+function CardImagePreview({
+  card,
+  children,
+}: {
+  card: DeckCardEntry
+  children: React.ReactNode
+}) {
+  if (!card.imageUrl) {
+    return <>{children}</>
+  }
+
+  return (
+    <HoverCard openDelay={150} closeDelay={0}>
+      <HoverCardTrigger asChild>
+        <span className="cursor-default">{children}</span>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-56 p-1" side="right" align="start">
+        <img
+          src={card.imageUrl}
+          alt={card.name}
+          loading="lazy"
+          className="rounded-md"
+        />
+      </HoverCardContent>
+    </HoverCard>
   )
 }
 
