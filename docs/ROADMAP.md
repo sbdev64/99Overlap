@@ -113,7 +113,7 @@ informational, cross-checked by eye.
       this milestone. Shipped together with a name/last-played sort control
       on the decks list. (#51)
 
-## Improvements
+## M5 — Improvements
 
 Scoped 2026-09-13. Shipping stays postponed (see "Ship it" below) — the
 user plans to self-host on a home-server laptop in the future, not now.
@@ -135,7 +135,7 @@ serves the "what do I not need to buy" question for planned decks.
 - [ ] **Keyboard shortcuts for common actions** — `/` to search, `n` to log
       a game, `?` for a shortcuts help dialog. (#64)
 
-## Statistics
+## M6 — Statistics
 
 Scoped 2026-09-13, supersedes the "Stats & charts" idea below. Built on
 `@tanstack/react-charts` (real, actively published, pre-1.0 — pin an exact
@@ -147,7 +147,7 @@ version).
       gathering dust** — second, more exploratory batch of charts on the
       same page. (#66)
 
-## UI/UX
+## M7 — UI/UX
 
 Scoped 2026-09-13 (GitHub milestone renamed from "UI enhancement /
 rework"), user's direction: "retro flat magic / wizard-like" styling.
