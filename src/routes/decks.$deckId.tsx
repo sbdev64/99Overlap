@@ -5,6 +5,7 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 import { useState } from 'react'
+import { Combobox } from '@/components/combobox'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -665,18 +666,15 @@ function SharedCardPicker({
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`shared-deck-${card.cardId}`}>Currently in</Label>
-          <select
+          <Combobox
             id={`shared-deck-${card.cardId}`}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-            value={selectedDeckId}
-            onChange={(e) => setSelectedDeckId(Number(e.target.value))}
-          >
-            {card.decksWithThisCard.map((deckOption) => (
-              <option key={deckOption.id} value={deckOption.id}>
-                {deckOption.name}
-              </option>
-            ))}
-          </select>
+            value={selectedDeckId ? String(selectedDeckId) : ''}
+            onChange={(v) => setSelectedDeckId(Number(v))}
+            options={card.decksWithThisCard.map((deckOption) => ({
+              value: String(deckOption.id),
+              label: deckOption.name,
+            }))}
+          />
         </div>
 
         {error && <p className="text-destructive text-sm">{error}</p>}

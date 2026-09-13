@@ -320,6 +320,19 @@ from prior v8 familiarity. Date, Deck, Pod, and Won columns are sortable;
 the Actions column (Edit/Delete, unchanged from before) isn't. Default
 (unsorted) order still matches the server's `ORDER BY date DESC, id DESC`.
 
+### 16. Unified typeable pickers (M7)
+
+`PodCombobox` (free text with autocomplete — see the decision log) and two
+different deck pickers used to look and behave differently: the game-log
+dialog used a non-typeable shadcn `Select`, and `SharedCardPicker`'s
+"currently in" field was a bare unstyled native `<select>`. A new
+`Combobox` component (`src/components/combobox.tsx`) shares
+`PodCombobox`'s Popover+Input interaction pattern but is strict —
+typing filters `options`, it never creates a value outside the list,
+reverting to the last valid selection on blur. Both deck pickers now use
+it; `PodCombobox` itself is untouched, since its free-text behavior is
+deliberately different (see docs/PRODUCT.md's decision log).
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
@@ -355,6 +368,7 @@ the Actions column (Edit/Delete, unchanged from before) isn't. Default
 | 2026-09-13 | Header nav (#68) lists every page explicitly (Import/Decks/Search/Shared/History/Statistics), not just a subset | User explicitly asked to "be able to access every page easily" while scoping M7 — the old per-page duplicated nav rows were also inconsistent about which links each page included (e.g. `/` never linked to itself). One shared header removes that drift entirely. |
 | 2026-09-13 | Deck card grid (#67) shows the first commander's art for Partner/Background decks, not both | A list thumbnail only needs one representative image; picking a second-image variant (split thumbnail, etc.) wasn't worth the layout complexity for a personal single-user tool. The deck detail page still lists every commander individually. |
 | 2026-09-13 | History table (#69) built against `@tanstack/react-table` v9's real API (`useTable` + opt-in `tableFeatures()`), not v8's more commonly-documented `useReactTable` | Installing the package pulled in v9, whose API changed substantially from v8 (most tutorials/examples online are still v8). Fetched the actual v9 quick-start/migration docs before writing any code rather than assuming v8 patterns would work — same discipline as the Charts library scare in M6. |
+| 2026-09-13 | M7 (UI/UX) closed same-day — new `Combobox` component (#70) added alongside `PodCombobox` rather than generalizing it into one component | The two pickers have genuinely different contracts: `PodCombobox` accepts free text (a typo becomes a new pod), the deck pickers must only accept an existing option. Forcing one component to cover both would need a mode flag threaded through render logic that never actually varies per call site — two small, single-purpose components stayed simpler than one configurable one. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this
