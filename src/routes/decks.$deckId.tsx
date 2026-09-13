@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { toDisplayDate } from '@/lib/date-format'
 import { cn } from '@/lib/utils'
 import { type DeckCardEntry, getDeck } from '@/server/decks'
 import { deleteDeck } from '@/server/delete-deck'
@@ -114,6 +115,11 @@ function DeckDetailPage() {
           {deck.commanderName && (
             <p className="text-muted-foreground">{deck.commanderName}</p>
           )}
+          <p className="text-muted-foreground text-sm">
+            {deck.lastPlayedDate
+              ? `Last played ${toDisplayDate(deck.lastPlayedDate)}`
+              : 'Never played'}
+          </p>
         </div>
         {!editing && (
           <div className="flex gap-2">

@@ -1,8 +1,8 @@
 import { notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { desc, eq, inArray } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { deckCards, decks } from '@/db/schema'
+import { deckCards, decks, games } from '@/db/schema'
 import type { TrackedBoard } from '@/lib/decklist-parser'
 
 export interface DeckSummary {
@@ -10,6 +10,9 @@ export interface DeckSummary {
   name: string
   commanderName: string | null
   createdAt: string
+  /** MAX(date) over this deck's logged games, or null if never played. See
+   * docs/PRODUCT.md#9-game-history-log-m4 / roadmap issue #51. */
+  lastPlayedDate: string | null
 }
 
 export const listDecks = createServerFn({ method: 'GET' }).handler(
@@ -31,9 +34,23 @@ export const listDecks = createServerFn({ method: 'GET' }).handler(
       // reliable tiebreaker that always matches insertion order.
       .orderBy(desc(decks.createdAt), desc(decks.id))
 
+    const lastPlayedRows = await db
+      .select({
+        deckId: games.deckId,
+        lastPlayedDate: sql<string>`max(${games.date})`,
+      })
+      .from(games)
+      .groupBy(games.deckId)
+    const lastPlayedByDeckId = new Map(
+      lastPlayedRows
+        .filter((row) => row.deckId !== null)
+        .map((row) => [row.deckId as number, row.lastPlayedDate]),
+    )
+
     return rows.map((row) => ({
       ...row,
       createdAt: row.createdAt.toISOString(),
+      lastPlayedDate: lastPlayedByDeckId.get(row.id) ?? null,
     }))
   },
 )
@@ -68,6 +85,9 @@ export interface DeckDetail {
   /** 1, or 2 for Partner/Background decks. See src/lib/decklist-parser.ts. */
   commanderCount: number
   cards: DeckCardEntry[]
+  /** MAX(date) over this deck's logged games, or null if never played. See
+   * docs/PRODUCT.md#9-game-history-log-m4 / roadmap issue #51. */
+  lastPlayedDate: string | null
 }
 
 const getDeckSchema = z.object({ deckId: z.coerce.number().int().positive() })
@@ -120,6 +140,11 @@ export const getDeck = createServerFn({ method: 'GET' })
         : []
     const deckNameById = new Map(currentDecks.map((d) => [d.id, d.name]))
 
+    const [lastPlayedRow] = await db
+      .select({ lastPlayedDate: sql<string>`max(${games.date})` })
+      .from(games)
+      .where(eq(games.deckId, deck.id))
+
     const cards: DeckCardEntry[] = deck.deckCards
       .map((deckCard) => {
         const sharedDecks = decksByCardId.get(deckCard.cardId) ?? []
@@ -150,5 +175,6 @@ export const getDeck = createServerFn({ method: 'GET' })
       sourceText: deck.sourceText,
       commanderCount: deck.commanderCount,
       cards,
+      lastPlayedDate: lastPlayedRow?.lastPlayedDate ?? null,
     }
   })
