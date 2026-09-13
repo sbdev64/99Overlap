@@ -17,6 +17,10 @@ export interface DeckSummary {
   /** MAX(date) over this deck's logged games, or null if never played. See
    * docs/PRODUCT.md#9-game-history-log-m4 / roadmap issue #51. */
   lastPlayedDate: string | null
+  /** The (first, if Partner/Background) commander's Scryfall art, once
+   * enriched (#18); null until then or if there's no commander. See
+   * roadmap issue #67. */
+  commanderImageUrl: string | null
 }
 
 export const listDecks = createServerFn({ method: 'GET' }).handler(
@@ -52,10 +56,30 @@ export const listDecks = createServerFn({ method: 'GET' }).handler(
         .map((row) => [row.deckId as number, row.lastPlayedDate]),
     )
 
+    const commanderRows = await db
+      .select({
+        deckId: deckCards.deckId,
+        cardId: deckCards.cardId,
+        imageUrl: cardsTable.imageUrl,
+      })
+      .from(deckCards)
+      .innerJoin(cardsTable, eq(deckCards.cardId, cardsTable.id))
+      .where(eq(deckCards.board, 'commander'))
+      .orderBy(deckCards.cardId)
+    // Partner/Background decks have two commander rows — first by cardId
+    // wins as "the" card shown, a fine simplification for a list thumbnail.
+    const commanderImageByDeckId = new Map<number, string | null>()
+    for (const row of commanderRows) {
+      if (!commanderImageByDeckId.has(row.deckId)) {
+        commanderImageByDeckId.set(row.deckId, row.imageUrl)
+      }
+    }
+
     return rows.map((row) => ({
       ...row,
       createdAt: row.createdAt.toISOString(),
       lastPlayedDate: lastPlayedByDeckId.get(row.id) ?? null,
+      commanderImageUrl: commanderImageByDeckId.get(row.id) ?? null,
     }))
   },
 )
