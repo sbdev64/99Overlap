@@ -1,4 +1,12 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import {
+  type ColumnDef,
+  createSortedRowModel,
+  rowSortingFeature,
+  sortFns,
+  tableFeatures,
+  useTable,
+} from '@tanstack/react-table'
 import { useMemo, useRef, useState } from 'react'
 import { DatePicker } from '@/components/date-picker'
 import { PodCombobox } from '@/components/pod-combobox'
@@ -47,6 +55,15 @@ export const Route = createFileRoute('/history')({
   },
 })
 
+// Doesn't depend on props/data, so it's built once — see the "Features are
+// opt-in" note in TanStack Table v9's migration guide (this replaces v8's
+// `getSortedRowModel()` passed directly to `useReactTable`).
+const tableFeaturesConfig = tableFeatures({
+  rowSortingFeature,
+  sortedRowModel: createSortedRowModel(),
+  sortFns,
+})
+
 function HistoryPage() {
   const { games, decks } = Route.useLoaderData()
   const router = useRouter()
@@ -56,6 +73,69 @@ function HistoryPage() {
   )
   const addGameTriggerRef = useRef<HTMLButtonElement>(null)
   useHotkey('n', () => addGameTriggerRef.current?.click())
+
+  const columns = useMemo<ColumnDef<typeof tableFeaturesConfig, GameEntry>[]>(
+    () => [
+      {
+        accessorKey: 'date',
+        header: 'Date',
+        cell: ({ row }) => toDisplayDate(row.original.date),
+      },
+      {
+        accessorKey: 'deckName',
+        header: 'Deck',
+        cell: ({ row }) =>
+          row.original.deckId ? (
+            <Link
+              to="/decks/$deckId"
+              params={{ deckId: String(row.original.deckId) }}
+              className="underline"
+            >
+              {row.original.deckName}
+            </Link>
+          ) : (
+            <span className="text-muted-foreground">
+              {row.original.deckName} (deleted)
+            </span>
+          ),
+      },
+      {
+        accessorKey: 'pod',
+        header: 'Pod',
+      },
+      {
+        accessorKey: 'won',
+        header: 'Won',
+        cell: ({ row }) =>
+          row.original.won && (
+            <span className="rounded bg-green-200 px-1.5 py-0.5 text-xs dark:bg-green-900">
+              Won
+            </span>
+          ),
+      },
+      {
+        id: 'actions',
+        header: () => <span className="sr-only">Actions</span>,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <GameRowActions
+            game={row.original}
+            decks={decks}
+            knownPods={knownPods}
+            onChanged={() => router.invalidate()}
+          />
+        ),
+      },
+    ],
+    [decks, knownPods, router],
+  )
+
+  const table = useTable({
+    key: 'history-table',
+    features: tableFeaturesConfig,
+    columns,
+    data: games,
+  })
 
   return (
     <main>
@@ -90,25 +170,40 @@ function HistoryPage() {
       ) : (
         <table className="mt-6 w-full text-left text-sm">
           <thead>
-            <tr className="border-b">
-              <th className="py-2 pr-4 font-medium">Date</th>
-              <th className="py-2 pr-4 font-medium">Deck</th>
-              <th className="py-2 pr-4 font-medium">Pod</th>
-              <th className="py-2 pr-4 font-medium">Won</th>
-              <th className="py-2 font-medium">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} className="border-b">
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="py-2 pr-4 font-medium"
+                    onClick={header.column.getToggleSortingHandler()}
+                    style={{
+                      cursor: header.column.getCanSort()
+                        ? 'pointer'
+                        : undefined,
+                    }}
+                  >
+                    <table.FlexRender header={header} />
+                    {
+                      {
+                        asc: ' ▲',
+                        desc: ' ▼',
+                      }[header.column.getIsSorted() as string]
+                    }
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {games.map((game) => (
-              <GameRow
-                key={game.id}
-                game={game}
-                decks={decks}
-                knownPods={knownPods}
-                onChanged={() => router.invalidate()}
-              />
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id} className="border-b">
+                {row.getAllCells().map((cell) => (
+                  <td key={cell.id} className="py-2 pr-4">
+                    <table.FlexRender cell={cell} />
+                  </td>
+                ))}
+              </tr>
             ))}
           </tbody>
         </table>
@@ -117,7 +212,7 @@ function HistoryPage() {
   )
 }
 
-function GameRow({
+function GameRowActions({
   game,
   decks,
   knownPods,
@@ -146,80 +241,50 @@ function GameRow({
   }
 
   return (
-    <tr className="border-b">
-      <td className="py-2 pr-4">{toDisplayDate(game.date)}</td>
-      <td className="py-2 pr-4">
-        {game.deckId ? (
-          <Link
-            to="/decks/$deckId"
-            params={{ deckId: String(game.deckId) }}
-            className="underline"
-          >
-            {game.deckName}
-          </Link>
-        ) : (
-          <span className="text-muted-foreground">
-            {game.deckName} (deleted)
-          </span>
-        )}
-      </td>
-      <td className="py-2 pr-4">{game.pod}</td>
-      <td className="py-2 pr-4">
-        {game.won && (
-          <span className="rounded bg-green-200 px-1.5 py-0.5 text-xs dark:bg-green-900">
-            Won
-          </span>
-        )}
-      </td>
-      <td className="py-2">
-        <div className="flex gap-2">
-          <GameDialog
-            trigger={
-              <Button size="sm" variant="outline">
-                Edit
-              </Button>
-            }
-            decks={decks}
-            knownPods={knownPods}
-            initial={game}
-            onSaved={onChanged}
-          />
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button size="sm" variant="destructive">
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this game entry?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This only removes the history row — it doesn't affect the deck
-                  or any shared-card tracking.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              {deleteError && (
-                <p className="text-destructive text-sm">{deleteError}</p>
-              )}
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={deleting}>
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={(e) => {
-                    e.preventDefault()
-                    handleDelete()
-                  }}
-                  disabled={deleting}
-                >
-                  {deleting ? 'Deleting…' : 'Delete'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </td>
-    </tr>
+    <div className="flex gap-2">
+      <GameDialog
+        trigger={
+          <Button size="sm" variant="outline">
+            Edit
+          </Button>
+        }
+        decks={decks}
+        knownPods={knownPods}
+        initial={game}
+        onSaved={onChanged}
+      />
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button size="sm" variant="destructive">
+            Delete
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this game entry?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This only removes the history row — it doesn't affect the deck or
+              any shared-card tracking.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && (
+            <p className="text-destructive text-sm">{deleteError}</p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDelete()
+              }}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   )
 }
 
