@@ -155,10 +155,11 @@ package; pre-1.0, pinned to 0.18.0).
       (precon/custom) decks; also pure/unit-tested
       (`src/lib/collection-stats.ts`). (#66)
 
-## M7 — UI/UX
+## M7 — UI/UX (closed 2026-09-13)
 
-Scoped 2026-09-13 (GitHub milestone renamed from "UI enhancement /
-rework"), user's direction: "retro flat magic / wizard-like" styling.
+Scoped and shipped same-day, 2026-09-13 (GitHub milestone renamed from "UI
+enhancement / rework"), user's direction: "retro flat magic / wizard-like"
+styling.
 
 - [x] **Redesign decks list as a card grid with commander art** — replaces
       the row list; a `--main-width` override widens just this page. (#67)
@@ -170,9 +171,10 @@ rework"), user's direction: "retro flat magic / wizard-like" styling.
       `@tanstack/react-table` v9 (its API changed substantially from the
       more commonly-documented v8 — confirmed against real docs first).
       (#69)
-- [ ] **Unify deck and pod pickers into one typeable combobox** — the game
+- [x] **Unify deck and pod pickers into one typeable combobox** — the game
       dialog's deck field (and `SharedCardPicker`'s) becomes typeable like
-      the pod field already is. (#70)
+      the pod field already is; a new strict `Combobox` component (unlike
+      `PodCombobox`, only accepts values from the list). (#70)
 
 ## Ship it (postponed, unmilestoned)
 

@@ -8,6 +8,7 @@ import {
   useTable,
 } from '@tanstack/react-table'
 import { useMemo, useRef, useState } from 'react'
+import { Combobox } from '@/components/combobox'
 import { DatePicker } from '@/components/date-picker'
 import { PodCombobox } from '@/components/pod-combobox'
 import {
@@ -32,13 +33,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useHotkey } from '@/hooks/use-hotkey'
 import { toDisplayDate, toIsoDate } from '@/lib/date-format'
 import { createGame } from '@/server/create-game'
@@ -362,21 +356,16 @@ function GameDialog({
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="game-deck">Deck</Label>
-            <Select
-              value={deckId ? String(deckId) : undefined}
-              onValueChange={(v) => setDeckId(Number(v))}
-            >
-              <SelectTrigger id="game-deck">
-                <SelectValue placeholder="Choose a deck" />
-              </SelectTrigger>
-              <SelectContent>
-                {decks.map((deck) => (
-                  <SelectItem key={deck.id} value={String(deck.id)}>
-                    {deck.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              id="game-deck"
+              value={deckId ? String(deckId) : ''}
+              onChange={(v) => setDeckId(Number(v))}
+              options={decks.map((deck) => ({
+                value: String(deck.id),
+                label: deck.name,
+              }))}
+              placeholder="Choose a deck"
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
