@@ -13,9 +13,14 @@ function SharedCardsPage() {
     <main>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Shared cards</h1>
-        <Link to="/decks" className="text-sm underline">
-          View decks
-        </Link>
+        <div className="flex gap-4">
+          <Link to="/decks" className="text-sm underline">
+            View decks
+          </Link>
+          <Link to="/stats" className="text-sm underline">
+            Statistics
+          </Link>
+        </div>
       </div>
       <p className="text-muted-foreground">
         Every card you own a single physical copy of and move between decks, and

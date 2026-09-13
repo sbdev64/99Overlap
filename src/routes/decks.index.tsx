@@ -83,6 +83,9 @@ function DecksPage() {
           <Link to="/history" className="text-sm underline">
             Game history
           </Link>
+          <Link to="/stats" className="text-sm underline">
+            Statistics
+          </Link>
         </div>
       </div>
 
