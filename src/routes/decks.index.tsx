@@ -49,6 +49,9 @@ function DecksPage() {
           <Link to="/" className="text-sm underline">
             Import a new deck
           </Link>
+          <Link to="/search" className="text-sm underline">
+            Search cards
+          </Link>
           <Link to="/history" className="text-sm underline">
             Game history
           </Link>

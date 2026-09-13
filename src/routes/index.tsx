@@ -49,6 +49,9 @@ function Home() {
           <Link to="/decks" className="text-sm underline">
             View saved decks
           </Link>
+          <Link to="/search" className="text-sm underline">
+            Search cards
+          </Link>
           <Link to="/history" className="text-sm underline">
             Game history
           </Link>
