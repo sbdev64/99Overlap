@@ -113,27 +113,32 @@ informational, cross-checked by eye.
       this milestone. Shipped together with a name/last-played sort control
       on the decks list. (#51)
 
-## M5 — Improvements
+## M5 — Improvements (closed 2026-09-13)
 
-Scoped 2026-09-13. Shipping stays postponed (see "Ship it" below) — the
-user plans to self-host on a home-server laptop in the future, not now.
-Deck classification (precon/custom/planning) is the reason: it directly
-serves the "what do I not need to buy" question for planned decks.
+Scoped and shipped same-day, 2026-09-13. Shipping stays postponed (see
+"Ship it" below) — the user plans to self-host on a home-server laptop in
+the future, not now. Deck classification (precon/custom/planning) is the
+reason M5 exists: it directly serves the "what do I not need to buy"
+question for planned decks.
 
-- [ ] **Classify decks as Precon, Custom, or Planning** — `Deck.type`, set
+- [x] **Classify decks as Precon, Custom, or Planning** — `Deck.type`, set
       at import, editable later. (#60)
-- [ ] **Section/filter the decks list by type** — Precon and Custom always
+- [x] **Section/filter the decks list by type** — Precon and Custom always
       shown as separate sections; Planning behind a togglable third
-      section (off by default). Depends on #60. (#61)
-- [ ] **Planning decks flag which cards you already own** — cross-checks a
+      section (off by default). (#61)
+- [x] **Planning decks flag which cards you already own** — cross-checks a
       Planning deck's cards against every owned (precon/custom) deck,
-      variant of the existing overlap-detection logic. Depends on #60.
-      (#62)
-- [ ] **Deck metadata: box color, sleeve color, archetype, auto-derived
-      color identity** — optional/nice-to-have; the lighter version of the
-      "deck metadata / collection tracker" idea below. (#63)
-- [ ] **Keyboard shortcuts for common actions** — `/` to search, `n` to log
-      a game, `?` for a shortcuts help dialog. (#64)
+      variant of the existing overlap-detection logic — the actual point
+      of the classification above. (#62)
+- [x] **Deck metadata: box color, sleeve color, archetype, auto-derived
+      color identity** — also fixed a real enrichment bug found while
+      testing this (Scryfall can return a card under different punctuation
+      than the name queried, e.g. an apostrophe placement mismatch, which
+      silently broke the lookup). (#63)
+- [x] **Keyboard shortcuts for common actions** — `/` to search, `n` to log
+      a game, `?` for a shortcuts help dialog. Verified via SSR only; the
+      user should confirm the actual keydown behavior by hand (no headless
+      browser available in the dev environment). (#64)
 
 ## M6 — Statistics
 
