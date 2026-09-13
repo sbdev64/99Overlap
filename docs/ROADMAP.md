@@ -63,19 +63,23 @@ Goal: mark a card as shared and always know what to physically move.
 ## M3 — Polish
 
 - [ ] **Scryfall enrichment** — background/on-import lookup filling in
-      `scryfallId`, mana cost, type line, image URL; rate-limited per
-      Scryfall's guidance.
+      `scryfallId`, mana cost, a numeric mana value (`cmc`), type line, color
+      identity, image URL; rate-limited per Scryfall's guidance.
 - [ ] **Card images in deck view** — use enrichment data once available.
-- [ ] **Group cards by type in deck view** — classify each card (Creature,
-      Planeswalker, Instant, Sorcery, Artifact, Enchantment, Land) from its
-      `typeLine` and group the deck's card list by type. Depends on Scryfall
-      enrichment above. See docs/PRODUCT.md#8-card-type-classification-in-deck-view-future-not-needed-yet.
 - [ ] **Search/filter across decks** — find a card by name across all saved
       decks (useful before even opening a specific deck).
 - [ ] **All-shared-cards overview page** — one place listing every shared
       card and its current deck, independent of any single deck view.
+- [ ] **Group/sort cards by type, color identity, or mana value in deck
+      view** (Moxfield-like) — a control to switch the deck card list
+      between three groupings: by primary type (default; Creature,
+      Planeswalker, Instant, Sorcery, Artifact, Enchantment, Land, parsed
+      from `typeLine`), by color identity, or by mana value, ascending.
+      Scheduled last since it depends on Scryfall enrichment above for
+      `typeLine`/`colorIdentity`/`cmc`. See
+      docs/PRODUCT.md#8-card-grouping-and-sort-in-deck-view-m3-moxfield-like.
 
-## M4 — History
+## M4 — History (closed 2026-09-13)
 
 Goal: replace the user's manual Google Sheet game log with a table in the
 app — add/edit/delete a row with date, deck, pod, and win/loss. Two
@@ -89,15 +93,18 @@ its decision log): `pod` is free text with autocomplete, no managed lookup
 table; logging a game never writes to `isShared`/`currentDeckId` — purely
 informational, cross-checked by eye.
 
-- [ ] **Game log schema + add/list** — `Game` table (date, deckId, deckName
+- [x] **Game log schema + add/list** — `Game` table (date, deckId, deckName
       snapshot, pod, won); `/history` page listing games newest first, with
       an "add game" form (date, deck select, pod text input with
-      autocomplete, won checkbox).
-- [ ] **Edit and delete a game entry** — same form pre-filled; delete with
+      autocomplete, won checkbox). (#49)
+- [x] **Edit and delete a game entry** — same form pre-filled; delete with
       confirmation (matches the existing deck-delete `AlertDialog` pattern).
-- [ ] **Show "last played" on deck pages** — derived from `MAX(date)` over
+      Shipped together with a styled pod autocomplete and app-wide
+      dd/mm/yyyy date display. (#50)
+- [x] **Show "last played" on deck pages** — derived from `MAX(date)` over
       this deck's games; the actual cross-check feature that's the point of
-      this milestone.
+      this milestone. Shipped together with a name/last-played sort control
+      on the decks list. (#51)
 
 ## Future milestones (not yet scheduled)
 

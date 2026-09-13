@@ -148,23 +148,33 @@ Overlapping cards that aren't marked shared stay highlighted but don't get
 move-tracking UI — the assumption is the user owns multiple physical
 copies, so no action is ever needed.
 
-### 7. Card metadata enrichment (nice-to-have, not blocking v1)
+### 7. Card metadata enrichment (M3)
 
 Look up parsed card names against the [Scryfall API](https://scryfall.com/docs/api)
-to fill in `scryfallId`, mana cost, type line, color identity, and card
-image. Useful for a nicer UI (images, color-coded mana costs) but not
-required for the core overlap/shared-card logic, which only needs card names.
-Scryfall asks for polite rate-limiting (~50-100ms between requests) and has
-a bulk-data download for offline lookups if we end up doing this a lot.
+to fill in `scryfallId`, mana cost, a numeric mana **value** (`cmc`, needed
+for feature 8's sort — not derivable from the `manaCost` string alone since
+that's a symbol string like `{2}{G}{G}`), type line, color identity, and
+card image. Useful for a nicer UI (images, color-coded mana costs, type/
+color/mana-value grouping) but not required for the core overlap/
+shared-card logic, which only needs card names. Scryfall asks for polite
+rate-limiting (~50-100ms between requests) and has a bulk-data download for
+offline lookups if we end up doing this a lot.
 
-### 8. Card type classification in deck view (future, not needed yet)
+### 8. Card grouping and sort in deck view (M3, Moxfield-like)
 
-The user wants each deck view to group/classify its cards by primary type —
-Creature, Planeswalker, Instant, Sorcery, Artifact, Enchantment, Land.
-Derivable from `typeLine` (already on `Card`, filled in by Scryfall
-enrichment in feature 7 above) by parsing the type(s) before the em dash,
-e.g. "Legendary Creature — Phyrexian Angel" → Creature. Depends on feature 7
-having run first. Noted here for later; not scheduled as blocking work.
+Deck detail page groups its cards into sections and offers a control to
+switch the grouping:
+
+- **By type** (default) — Creature, Planeswalker, Instant, Sorcery,
+  Artifact, Enchantment, Land, parsed from `typeLine` (the text before the
+  em dash, e.g. "Legendary Creature — Phyrexian Angel" → Creature).
+- **By color identity** — one section per color-identity combination present
+  in the deck (using `Card.colorIdentity`), e.g. "White", "Blue/Black",
+  "Colorless".
+- **By mana value** — one section per numeric `cmc`, ascending (0, 1, 2, …).
+
+Within any grouping, cards are sorted alphabetically inside each section.
+Depends on feature 7 having populated `typeLine`/`colorIdentity`/`cmc` first.
 
 ### 9. Game history log (M4)
 
@@ -223,6 +233,7 @@ history rows.
 | 2026-09-13 | Milestones restructured: M3 (Polish) unchanged, M4 retargeted from "Ship it" to "History", "Ship it" issues (#22-24) kept open but unmilestoned, new "UI enhancement / rework" milestone created but unscheduled | User wants two more milestones (History, then UI rework at some undecided point) before shipping is revisited; didn't want to guess a milestone number for "Ship it" today given more milestones are coming. |
 | 2026-09-13 | Game history (`Game` entity) never writes to `isShared`/`currentDeckId` — purely informational, cross-checked by eye | Considered auto-updating a shared card's location from the most-recently-logged game among decks that share it, but rejected: the user plans to backfill years of historical games from a spreadsheet, and a backfilled (non-most-recent) entry could silently overwrite correct manual tracking. |
 | 2026-09-13 | `Game.pod` is free text with autocomplete, not a managed Pod entity | Simpler for a single-user tool; no "manage pods" screen needed. Accepted trade-off: a typo creates a new distinct pod name rather than being caught by a lookup table. |
+| 2026-09-13 | M4 closed; M3 (Polish) started. Deck-view grouping (formerly #27, "by type" only) expanded to a switchable by-type/by-color-identity/by-mana-value grouping, type as the default — Moxfield-like | User explicitly asked for the broader grouping when scoping M3. Since it needs `cmc` (mana value) which isn't derivable from the existing `manaCost` string, feature 7 (Scryfall enrichment) now also fetches that field. Scheduled last within M3 since it depends on enrichment (#18) landing first. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this
