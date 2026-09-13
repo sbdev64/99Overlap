@@ -43,6 +43,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { GROUP_BY_OPTIONS, type GroupBy, groupCards } from '@/lib/card-grouping'
 import { toDisplayDate } from '@/lib/date-format'
+import { DECK_TYPE_LABELS, DECK_TYPES, type DeckType } from '@/lib/deck-type'
 import { cn } from '@/lib/utils'
 import { type DeckCardEntry, getDeck } from '@/server/decks'
 import { deleteDeck } from '@/server/delete-deck'
@@ -78,6 +79,7 @@ function DeckDetailPage() {
   const [hasTwoCommanders, setHasTwoCommanders] = useState(
     deck.commanderCount === 2,
   )
+  const [type, setType] = useState<DeckType>(deck.type)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -93,6 +95,7 @@ function DeckDetailPage() {
           deckId: deck.id,
           sourceText,
           commanderCount: hasTwoCommanders ? 2 : 1,
+          type,
         },
       })
       setEditing(false)
@@ -126,7 +129,12 @@ function DeckDetailPage() {
 
       <div className="mt-2 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{deck.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold">{deck.name}</h1>
+            <span className="rounded bg-secondary px-1.5 py-0.5 text-secondary-foreground text-xs">
+              {DECK_TYPE_LABELS[deck.type]}
+            </span>
+          </div>
           {deck.commanderName && (
             <p className="text-muted-foreground">{deck.commanderName}</p>
           )}
@@ -143,6 +151,7 @@ function DeckDetailPage() {
               onClick={() => {
                 setSourceText(deck.sourceText)
                 setHasTwoCommanders(deck.commanderCount === 2)
+                setType(deck.type)
                 setError(null)
                 setEditing(true)
               }}
@@ -204,6 +213,21 @@ function DeckDetailPage() {
 
       {editing && (
         <form className="mt-4 flex flex-col gap-2" onSubmit={handleSave}>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="edit-deck-type">Type</Label>
+            <Select value={type} onValueChange={(v) => setType(v as DeckType)}>
+              <SelectTrigger id="edit-deck-type" className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DECK_TYPES.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {DECK_TYPE_LABELS[option]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Textarea
             value={sourceText}
             onChange={(e) => setSourceText(e.target.value)}

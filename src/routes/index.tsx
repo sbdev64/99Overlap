@@ -4,7 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { DECK_TYPE_LABELS, DECK_TYPES, type DeckType } from '@/lib/deck-type'
 import { type ImportDeckResult, importDeck } from '@/server/import-deck'
 
 export const Route = createFileRoute('/')({ component: Home })
@@ -13,6 +21,7 @@ function Home() {
   const [name, setName] = useState('')
   const [sourceText, setSourceText] = useState('')
   const [hasTwoCommanders, setHasTwoCommanders] = useState(false)
+  const [type, setType] = useState<DeckType>('custom')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ImportDeckResult | null>(null)
@@ -28,12 +37,14 @@ function Home() {
           name,
           sourceText,
           commanderCount: hasTwoCommanders ? 2 : 1,
+          type,
         },
       })
       setResult(imported)
       setName('')
       setSourceText('')
       setHasTwoCommanders(false)
+      setType('custom')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to import deck')
     } finally {
@@ -77,6 +88,26 @@ function Home() {
         </div>
 
         <div className="flex flex-col gap-1.5">
+          <Label htmlFor="deck-type">Type</Label>
+          <Select value={type} onValueChange={(v) => setType(v as DeckType)}>
+            <SelectTrigger id="deck-type" className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DECK_TYPES.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {DECK_TYPE_LABELS[option]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-muted-foreground text-xs">
+            Planning = wanted but not owned yet — doesn't count as "owned" for
+            the already-own-this-card check.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="deck-text">Decklist</Label>
           <Textarea
             id="deck-text"
@@ -114,6 +145,9 @@ function Home() {
           <p className="font-medium">
             Imported "{result.deckName}"
             {result.commanderName ? ` (${result.commanderName})` : ''}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {DECK_TYPE_LABELS[result.type]}
           </p>
           <p className="text-muted-foreground text-sm">
             {result.cardCount} cards, {result.newCardCount} new cards created

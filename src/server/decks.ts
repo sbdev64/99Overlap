@@ -3,12 +3,14 @@ import { createServerFn } from '@tanstack/react-start'
 import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { cards as cardsTable, deckCards, decks, games } from '@/db/schema'
+import type { DeckType } from '@/lib/deck-type'
 import type { TrackedBoard } from '@/lib/decklist-parser'
 import { enrichCards } from './scryfall-enrich'
 
 export interface DeckSummary {
   id: number
   name: string
+  type: DeckType
   commanderName: string | null
   createdAt: string
   /** MAX(date) over this deck's logged games, or null if never played. See
@@ -26,6 +28,7 @@ export const listDecks = createServerFn({ method: 'GET' }).handler(
       .select({
         id: decks.id,
         name: decks.name,
+        type: decks.type,
         commanderName: decks.commanderName,
         createdAt: decks.createdAt,
       })
@@ -88,6 +91,7 @@ export interface DeckCardEntry {
 export interface DeckDetail {
   id: number
   name: string
+  type: DeckType
   commanderName: string | null
   sourceText: string
   /** 1, or 2 for Partner/Background decks. See src/lib/decklist-parser.ts. */
@@ -207,6 +211,7 @@ export const getDeck = createServerFn({ method: 'GET' })
     return {
       id: deck.id,
       name: deck.name,
+      type: deck.type,
       commanderName: deck.commanderName,
       sourceText: deck.sourceText,
       commanderCount: deck.commanderCount,

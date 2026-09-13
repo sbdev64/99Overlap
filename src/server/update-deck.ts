@@ -3,6 +3,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { deckCards, decks } from '@/db/schema'
+import { DECK_TYPES } from '@/lib/deck-type'
 import { parseDecklist } from '@/lib/decklist-parser'
 import { insertDeckCards } from './deck-card-sync'
 import { enrichCards } from './scryfall-enrich'
@@ -13,6 +14,7 @@ const updateDeckSchema = z.object({
   // 2 for Partner/Background decks (two commander lines, no header). See
   // src/lib/decklist-parser.ts.
   commanderCount: z.union([z.literal(1), z.literal(2)]).default(1),
+  type: z.enum(DECK_TYPES),
 })
 
 export interface UpdateDeckResult {
@@ -52,6 +54,7 @@ export const updateDeck = createServerFn({ method: 'POST' })
       const [deck] = await tx
         .update(decks)
         .set({
+          type: data.type,
           commanderName: parsed.commanderNames.join(', ') || null,
           sourceText: data.sourceText,
           commanderCount: data.commanderCount,
