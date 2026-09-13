@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Menu, Wand2 } from 'lucide-react'
 import { useState } from 'react'
 import { ManaStrip } from '@/components/mana-strip'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -51,37 +52,40 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label="Open navigation menu"
-            >
-              <Menu className="size-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right">
-            <SheetHeader>
-              <SheetTitle className="font-display">99Overlap</SheetTitle>
-            </SheetHeader>
-            <nav className="flex flex-col gap-1 px-4">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-2 py-2 text-sm hover:bg-accent"
-                  activeOptions={{ exact: link.to === '/' }}
-                  activeProps={{ className: '!text-primary font-medium' }}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                aria-label="Open navigation menu"
+              >
+                <Menu className="size-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <SheetHeader>
+                <SheetTitle className="font-display">99Overlap</SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-1 px-4">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-md px-2 py-2 text-sm hover:bg-accent"
+                    activeOptions={{ exact: link.to === '/' }}
+                    activeProps={{ className: '!text-primary font-medium' }}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
       <ManaStrip />
     </header>
