@@ -273,6 +273,26 @@ All three degrade gracefully when the underlying enrichment
 (`colorIdentity`/`cmc`) hasn't run yet for a card — it just falls into an
 "Unknown" bucket rather than being dropped or crashing the aggregation.
 
+### 13. Persistent header/footer and visual theme (M7)
+
+Every route used to repeat its own row of nav `<Link>`s — copy-pasted
+across six files. Replaced with `SiteHeader`/`SiteFooter`, rendered once
+from `__root.tsx` so they wrap every page, including any future one. The
+header has a fixed set of links to every page in the app (Import, Decks,
+Search, Shared, History, Statistics) — a `Sheet` drawer on narrow screens,
+a horizontal row on wider ones — plus a wordmark link back to `/`. Uses
+TanStack Router's `activeProps`/`activeOptions` for current-page
+highlighting rather than anything hand-rolled.
+
+Visual theme ("retro flat magic," user's direction): parchment/ink color
+tokens replace the shadcn default grayscale palette (light and dark both
+redefined, not just light), a `Cinzel` display font for headings via
+`font-display`, and a small five-color mana-color strip (`ManaStrip`,
+plain flat color swatches, no gradients/textures) under the header and
+above the footer as the one deliberately "wizard-like" flourish. Kept
+flat and minimal rather than skeuomorphic per the issue's explicit
+constraint.
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
@@ -305,6 +325,7 @@ All three degrade gracefully when the underlying enrichment
 | 2026-09-13 | M5 (Improvements) closed same-day — deck classification, sectioned/filterable decks list, Planning decks' owned/need-to-buy check, deck metadata, keyboard shortcuts (#60-64) | Found and fixed a real bug while testing #63: `scryfall-enrich.ts` keyed lookup results by Scryfall's *returned* canonical name rather than the name actually queried, so any card where Scryfall's spelling differs in punctuation from the query (e.g. an apostrophe placed differently) silently never got enriched. Fixed by normalizing both sides before matching. Keyboard shortcuts (#64) could only be verified via SSR/build, not actual keydown behavior — no headless browser or DOM-testing setup in this environment; flagged for the user to confirm by hand. |
 | 2026-09-13 | Statistics dashboard (#65) uses `@tanstack/charts` + its `/react` subpath, not the separately-published `@tanstack/react-charts` package | Initially installed `@tanstack/react-charts` since it matched the name from earlier planning, but its bundled types have no usage examples and no README. Fetched the actual TanStack Charts docs (quick-start, bar/line examples) and confirmed the current, documented React entry point is `@tanstack/charts/react` — a subpath of the core grammar-of-graphics package, not the older same-org package. Swapped before writing any chart code. Verified real SSR output (correct SVG geometry matching aggregated data) before considering the integration trustworthy, given the library is pre-1.0 and internally quite complex (dozens of composable mark/scale/transform modules). |
 | 2026-09-13 | M6 (Statistics) closed same-day — collection-level stats (#66) scoped to owned (precon/custom) decks only, "gathering dust" rendered as a plain list rather than a chart | Planning decks aren't physically built, so counting them toward color identity spread or mana curve would misrepresent the actual collection — same exclusion logic as feature 10's already-owned check. "Gathering dust" is a ranking of decks, not really chart-shaped data (dates and deck links matter more than a bar's height), so it's a plain list with exact last-played dates, matching the issue's explicit "surfaced as a simple list" suggestion. |
+| 2026-09-13 | Header nav (#68) lists every page explicitly (Import/Decks/Search/Shared/History/Statistics), not just a subset | User explicitly asked to "be able to access every page easily" while scoping M7 — the old per-page duplicated nav rows were also inconsistent about which links each page included (e.g. `/` never linked to itself). One shared header removes that drift entirely. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this

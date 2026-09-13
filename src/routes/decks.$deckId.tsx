@@ -144,7 +144,7 @@ function DeckDetailPage() {
       <div className="mt-2 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold">{deck.name}</h1>
+            <h1 className="font-display font-semibold text-2xl">{deck.name}</h1>
             <span className="rounded bg-secondary px-1.5 py-0.5 text-secondary-foreground text-xs">
               {DECK_TYPE_LABELS[deck.type]}
             </span>

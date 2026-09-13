@@ -162,9 +162,10 @@ rework"), user's direction: "retro flat magic / wizard-like" styling.
 
 - [ ] **Redesign decks list as a card grid with commander art** — replaces
       the current row list. (#67)
-- [ ] **Persistent header/footer + cohesive visual theme** — de-duplicates
-      the nav row currently copy-pasted across every route file, plus a
-      real color palette/typography pass. (#68)
+- [x] **Persistent header/footer + cohesive visual theme** — de-duplicates
+      the nav row currently copy-pasted across every route file (now links
+      every page from one place, per explicit user request), plus a real
+      color palette/typography pass. (#68)
 - [ ] **Migrate history table to TanStack Table** — sortable columns,
       `@tanstack/react-table`. (#69)
 - [ ] **Unify deck and pod pickers into one typeable combobox** — the game

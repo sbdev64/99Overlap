@@ -1,5 +1,7 @@
 import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
 import { GlobalHotkeys } from '@/components/hotkeys'
+import { SiteFooter } from '@/components/site-footer'
+import { SiteHeader } from '@/components/site-header'
 
 import appCss from '../styles.css?url'
 
@@ -19,6 +21,19 @@ export const Route = createRootRoute({
     ],
     links: [
       {
+        rel: 'preconnect',
+        href: 'https://fonts.googleapis.com',
+      },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossOrigin: 'anonymous',
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap',
+      },
+      {
         rel: 'stylesheet',
         href: appCss,
       },
@@ -34,7 +49,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <div className="flex min-h-screen flex-col">
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </div>
         <GlobalHotkeys />
 
         <Scripts />

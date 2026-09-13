@@ -59,23 +59,7 @@ function HistoryPage() {
 
   return (
     <main>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Game history</h1>
-        <div className="flex gap-4">
-          <Link to="/decks" className="text-sm underline">
-            View decks
-          </Link>
-          <Link to="/search" className="text-sm underline">
-            Search cards
-          </Link>
-          <Link to="/shared" className="text-sm underline">
-            Shared cards
-          </Link>
-          <Link to="/stats" className="text-sm underline">
-            Statistics
-          </Link>
-        </div>
-      </div>
+      <h1 className="font-display font-semibold text-2xl">Game history</h1>
       <p className="text-muted-foreground">
         Track when and where you played each deck.
       </p>
