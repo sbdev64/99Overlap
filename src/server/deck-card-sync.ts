@@ -37,6 +37,9 @@ async function findOrCreateCardId(
 export interface SyncResult {
   cardCount: number
   newCardCount: number
+  /** Freshly created Card rows, for the caller to enrich from Scryfall
+   * after the transaction commits. See docs/PRODUCT.md#7. */
+  newCards: { id: number; name: string }[]
 }
 
 /**
@@ -68,9 +71,13 @@ export async function insertDeckCards(
   }
 
   let newCardCount = 0
+  const newCards: { id: number; name: string }[] = []
   for (const entry of merged.values()) {
     const { id: cardId, isNew } = await findOrCreateCardId(tx, entry.name)
-    if (isNew) newCardCount += 1
+    if (isNew) {
+      newCardCount += 1
+      newCards.push({ id: cardId, name: entry.name })
+    }
 
     await tx.insert(deckCards).values({
       deckId,
@@ -80,5 +87,5 @@ export async function insertDeckCards(
     })
   }
 
-  return { cardCount: merged.size, newCardCount }
+  return { cardCount: merged.size, newCardCount, newCards }
 }

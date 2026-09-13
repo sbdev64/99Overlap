@@ -2,8 +2,9 @@ import { notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { deckCards, decks, games } from '@/db/schema'
+import { cards as cardsTable, deckCards, decks, games } from '@/db/schema'
 import type { TrackedBoard } from '@/lib/decklist-parser'
+import { enrichCards } from './scryfall-enrich'
 
 export interface DeckSummary {
   id: number
@@ -106,6 +107,30 @@ export const getDeck = createServerFn({ method: 'GET' })
 
     if (!deck) {
       throw notFound()
+    }
+
+    // Lazily backfills cards imported before Scryfall enrichment (#18)
+    // existed — on-import enrichment alone would otherwise never reach
+    // decks that were already saved. Best-effort; see enrichCards.
+    const unenriched = deck.deckCards
+      .filter((deckCard) => deckCard.card.scryfallId === null)
+      .map((deckCard) => ({ id: deckCard.card.id, name: deckCard.card.name }))
+    if (unenriched.length > 0) {
+      await enrichCards(db, unenriched)
+      const refreshed = await db
+        .select()
+        .from(cardsTable)
+        .where(
+          inArray(
+            cardsTable.id,
+            unenriched.map((card) => card.id),
+          ),
+        )
+      const refreshedById = new Map(refreshed.map((card) => [card.id, card]))
+      for (const deckCard of deck.deckCards) {
+        const updated = refreshedById.get(deckCard.card.id)
+        if (updated) deckCard.card = updated
+      }
     }
 
     const cardIds = deck.deckCards.map((deckCard) => deckCard.cardId)
