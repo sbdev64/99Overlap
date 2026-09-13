@@ -72,8 +72,43 @@ export const deckCards = sqliteTable(
   (table) => [primaryKey({ columns: [table.deckId, table.cardId] })],
 )
 
+/**
+ * One row per game logged. Replaces the user's manual Google Sheet game
+ * log. See docs/PRODUCT.md#9-game-history-log-m4.
+ */
+export const games = sqliteTable('games', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  // User-picked date the game was played, stored as 'YYYY-MM-DD' (matches
+  // <input type="date"> exactly) rather than a timestamp — there's no
+  // time-of-day meaning here, and this sidesteps timezone conversion.
+  date: text('date').notNull(),
+  // Nullable: set to null if the deck is later deleted, same as
+  // cards.currentDeckId. deckName below keeps the history readable anyway.
+  deckId: integer('deck_id').references(() => decks.id, {
+    onDelete: 'set null',
+  }),
+  // Denormalized snapshot of Deck.name at log time, so a deleted or
+  // renamed deck doesn't blank out past history rows.
+  deckName: text('deck_name').notNull(),
+  // Which regular playgroup — free text with autocomplete in the UI, not a
+  // managed entity. See the decision log in docs/PRODUCT.md.
+  pod: text('pod').notNull(),
+  won: integer('won', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+})
+
 export const decksRelations = relations(decks, ({ many }) => ({
   deckCards: many(deckCards),
+  games: many(games),
+}))
+
+export const gamesRelations = relations(games, ({ one }) => ({
+  deck: one(decks, { fields: [games.deckId], references: [decks.id] }),
 }))
 
 export const cardsRelations = relations(cards, ({ many, one }) => ({

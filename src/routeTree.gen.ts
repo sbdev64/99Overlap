@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DecksRouteImport } from './routes/decks'
+import { Route as HistoryRouteImport } from './routes/history'
 import { Route as DecksIndexRouteImport } from './routes/decks.index'
 import { Route as DecksDeckIdRouteImport } from './routes/decks.$deckId'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const DecksRoute = DecksRouteImport.update({
   id: '/decks',
   path: '/decks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DecksIndexRoute = DecksIndexRouteImport.update({
@@ -38,11 +44,13 @@ const DecksDeckIdRoute = DecksDeckIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/decks': typeof DecksRouteWithChildren
+  '/history': typeof HistoryRoute
   '/decks/$deckId': typeof DecksDeckIdRoute
   '/decks/': typeof DecksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
   '/decks/$deckId': typeof DecksDeckIdRoute
   '/decks': typeof DecksIndexRoute
 }
@@ -50,20 +58,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/decks': typeof DecksRouteWithChildren
+  '/history': typeof HistoryRoute
   '/decks/$deckId': typeof DecksDeckIdRoute
   '/decks/': typeof DecksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/decks' | '/decks/$deckId' | '/decks/'
+  fullPaths: '/' | '/decks' | '/history' | '/decks/$deckId' | '/decks/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/decks/$deckId' | '/decks'
-  id: '__root__' | '/' | '/decks' | '/decks/$deckId' | '/decks/'
+  to: '/' | '/history' | '/decks/$deckId' | '/decks'
+  id: '__root__' | '/' | '/decks' | '/history' | '/decks/$deckId' | '/decks/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DecksRoute: typeof DecksRouteWithChildren
+  HistoryRoute: typeof HistoryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -80,6 +90,13 @@ declare module '@tanstack/react-router' {
       path: '/decks'
       fullPath: '/decks'
       preLoaderRoute: typeof DecksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/decks/': {
@@ -114,6 +131,7 @@ const DecksRouteWithChildren = DecksRoute._addFileChildren(DecksRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DecksRoute: DecksRouteWithChildren,
+  HistoryRoute: HistoryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
