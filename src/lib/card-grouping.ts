@@ -1,4 +1,5 @@
 import type { DeckCardEntry } from '@/server/decks'
+import { colorIdentityLabel } from './colors'
 
 export type GroupBy = 'type' | 'colorIdentity' | 'manaValue'
 
@@ -26,14 +27,6 @@ const TYPE_PRECEDENCE = [
   'Land',
 ]
 
-const COLOR_NAMES: Record<string, string> = {
-  W: 'White',
-  U: 'Blue',
-  B: 'Black',
-  R: 'Red',
-  G: 'Green',
-}
-
 function primaryType(typeLine: string | null): string {
   if (!typeLine) return 'Other'
   // Double-faced cards list both faces separated by " // "; the front
@@ -42,15 +35,6 @@ function primaryType(typeLine: string | null): string {
   const wordsBeforeDash = (frontFace.split('—')[0] ?? frontFace).trim()
   const words = wordsBeforeDash.split(/\s+/)
   return TYPE_PRECEDENCE.find((type) => words.includes(type)) ?? 'Other'
-}
-
-function colorIdentityLabel(colorIdentity: string | null): string {
-  if (colorIdentity === null) return 'Unknown'
-  if (colorIdentity === '') return 'Colorless'
-  return colorIdentity
-    .split(',')
-    .map((letter) => COLOR_NAMES[letter] ?? letter)
-    .join('/')
 }
 
 function manaValueLabel(cmc: number | null): string {

@@ -19,7 +19,16 @@ export const decks = sqliteTable('decks', {
   type: text('type', { enum: DECK_TYPES }).notNull().default('custom'),
   // Display-only fields derived from the parsed decklist, not used for matching logic.
   commanderName: text('commander_name'),
+  // Auto-derived from the commander(s)' enriched Card.colorIdentity once
+  // Scryfall enrichment has run (getDeck computes and persists it lazily,
+  // same pattern as card enrichment backfill). Not user-editable.
+  // See docs/PRODUCT.md#10.
   colorIdentity: text('color_identity'),
+  // Free-text physical bookkeeping + deck metadata (docs/PRODUCT.md#10),
+  // all optional.
+  boxColor: text('box_color'),
+  sleeveColor: text('sleeve_color'),
+  archetype: text('archetype'),
   // How many of the leading card lines are commanders when the pasted text
   // has no explicit "Commander" header — 1 normally, 2 for Partner/
   // Background decks. Set by the user (checkbox on import/edit) since the

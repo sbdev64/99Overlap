@@ -32,6 +32,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -42,6 +43,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { GROUP_BY_OPTIONS, type GroupBy, groupCards } from '@/lib/card-grouping'
+import { colorIdentityLabel } from '@/lib/colors'
 import { toDisplayDate } from '@/lib/date-format'
 import { DECK_TYPE_LABELS, DECK_TYPES, type DeckType } from '@/lib/deck-type'
 import { cn } from '@/lib/utils'
@@ -86,6 +88,9 @@ function DeckDetailPage() {
     deck.commanderCount === 2,
   )
   const [type, setType] = useState<DeckType>(deck.type)
+  const [boxColor, setBoxColor] = useState(deck.boxColor ?? '')
+  const [sleeveColor, setSleeveColor] = useState(deck.sleeveColor ?? '')
+  const [archetype, setArchetype] = useState(deck.archetype ?? '')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -102,6 +107,9 @@ function DeckDetailPage() {
           sourceText,
           commanderCount: hasTwoCommanders ? 2 : 1,
           type,
+          boxColor,
+          sleeveColor,
+          archetype,
         },
       })
       setEditing(false)
@@ -149,6 +157,22 @@ function DeckDetailPage() {
               ? `Last played ${toDisplayDate(deck.lastPlayedDate)}`
               : 'Never played'}
           </p>
+          {(deck.colorIdentity !== null ||
+            deck.archetype ||
+            deck.boxColor ||
+            deck.sleeveColor) && (
+            <p className="text-muted-foreground text-sm">
+              {[
+                deck.colorIdentity !== null &&
+                  colorIdentityLabel(deck.colorIdentity),
+                deck.archetype,
+                deck.boxColor && `${deck.boxColor} box`,
+                deck.sleeveColor && `${deck.sleeveColor} sleeves`,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
         </div>
         {!editing && (
           <div className="flex gap-2">
@@ -158,6 +182,9 @@ function DeckDetailPage() {
                 setSourceText(deck.sourceText)
                 setHasTwoCommanders(deck.commanderCount === 2)
                 setType(deck.type)
+                setBoxColor(deck.boxColor ?? '')
+                setSleeveColor(deck.sleeveColor ?? '')
+                setArchetype(deck.archetype ?? '')
                 setError(null)
                 setEditing(true)
               }}
@@ -233,6 +260,35 @@ function DeckDetailPage() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Label htmlFor="edit-archetype">Archetype</Label>
+              <Input
+                id="edit-archetype"
+                value={archetype}
+                onChange={(e) => setArchetype(e.target.value)}
+                placeholder="Aristocrats"
+              />
+            </div>
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Label htmlFor="edit-box-color">Box color</Label>
+              <Input
+                id="edit-box-color"
+                value={boxColor}
+                onChange={(e) => setBoxColor(e.target.value)}
+                placeholder="Black"
+              />
+            </div>
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Label htmlFor="edit-sleeve-color">Sleeve color</Label>
+              <Input
+                id="edit-sleeve-color"
+                value={sleeveColor}
+                onChange={(e) => setSleeveColor(e.target.value)}
+                placeholder="Purple"
+              />
+            </div>
           </div>
           <Textarea
             value={sourceText}
