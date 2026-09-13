@@ -13,9 +13,14 @@ function DecksPage() {
     <main>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Decks</h1>
-        <Link to="/" className="text-sm underline">
-          Import a new deck
-        </Link>
+        <div className="flex gap-4">
+          <Link to="/" className="text-sm underline">
+            Import a new deck
+          </Link>
+          <Link to="/history" className="text-sm underline">
+            Game history
+          </Link>
+        </div>
       </div>
 
       {decks.length === 0 ? (

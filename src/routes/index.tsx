@@ -45,9 +45,14 @@ function Home() {
     <main>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">99Overlap</h1>
-        <Link to="/decks" className="text-sm underline">
-          View saved decks
-        </Link>
+        <div className="flex gap-4">
+          <Link to="/decks" className="text-sm underline">
+            View saved decks
+          </Link>
+          <Link to="/history" className="text-sm underline">
+            Game history
+          </Link>
+        </div>
       </div>
       <p className="text-muted-foreground">
         Paste a decklist copied from Moxfield to import it.
