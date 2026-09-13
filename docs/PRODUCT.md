@@ -309,6 +309,17 @@ an inline `--main-width` CSS custom property the shared `main` rule reads
 point other wide pages can reuse later instead of duplicating the whole
 layout rule.
 
+### 15. History table on TanStack Table (M7)
+
+The `/history` table is now driven by `@tanstack/react-table` v9 instead of
+a hand-rolled `<table>`. v9 changed significantly from the more commonly
+documented v8: `useReactTable` became `useTable`, and row-model features
+(sorting, etc.) are opt-in via `tableFeatures()` rather than bundled —
+confirmed against the real v9 docs before writing any code, not assumed
+from prior v8 familiarity. Date, Deck, Pod, and Won columns are sortable;
+the Actions column (Edit/Delete, unchanged from before) isn't. Default
+(unsorted) order still matches the server's `ORDER BY date DESC, id DESC`.
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
@@ -343,6 +354,7 @@ layout rule.
 | 2026-09-13 | M6 (Statistics) closed same-day — collection-level stats (#66) scoped to owned (precon/custom) decks only, "gathering dust" rendered as a plain list rather than a chart | Planning decks aren't physically built, so counting them toward color identity spread or mana curve would misrepresent the actual collection — same exclusion logic as feature 10's already-owned check. "Gathering dust" is a ranking of decks, not really chart-shaped data (dates and deck links matter more than a bar's height), so it's a plain list with exact last-played dates, matching the issue's explicit "surfaced as a simple list" suggestion. |
 | 2026-09-13 | Header nav (#68) lists every page explicitly (Import/Decks/Search/Shared/History/Statistics), not just a subset | User explicitly asked to "be able to access every page easily" while scoping M7 — the old per-page duplicated nav rows were also inconsistent about which links each page included (e.g. `/` never linked to itself). One shared header removes that drift entirely. |
 | 2026-09-13 | Deck card grid (#67) shows the first commander's art for Partner/Background decks, not both | A list thumbnail only needs one representative image; picking a second-image variant (split thumbnail, etc.) wasn't worth the layout complexity for a personal single-user tool. The deck detail page still lists every commander individually. |
+| 2026-09-13 | History table (#69) built against `@tanstack/react-table` v9's real API (`useTable` + opt-in `tableFeatures()`), not v8's more commonly-documented `useReactTable` | Installing the package pulled in v9, whose API changed substantially from v8 (most tutorials/examples online are still v8). Fetched the actual v9 quick-start/migration docs before writing any code rather than assuming v8 patterns would work — same discipline as the Charts library scare in M6. |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this

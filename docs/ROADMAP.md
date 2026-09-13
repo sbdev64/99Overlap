@@ -166,8 +166,10 @@ rework"), user's direction: "retro flat magic / wizard-like" styling.
       the nav row currently copy-pasted across every route file (now links
       every page from one place, per explicit user request), plus a real
       color palette/typography pass. (#68)
-- [ ] **Migrate history table to TanStack Table** — sortable columns,
-      `@tanstack/react-table`. (#69)
+- [x] **Migrate history table to TanStack Table** — sortable columns,
+      `@tanstack/react-table` v9 (its API changed substantially from the
+      more commonly-documented v8 — confirmed against real docs first).
+      (#69)
 - [ ] **Unify deck and pod pickers into one typeable combobox** — the game
       dialog's deck field (and `SharedCardPicker`'s) becomes typeable like
       the pod field already is. (#70)
