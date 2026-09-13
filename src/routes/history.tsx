@@ -65,6 +65,9 @@ function HistoryPage() {
           <Link to="/search" className="text-sm underline">
             Search cards
           </Link>
+          <Link to="/shared" className="text-sm underline">
+            Shared cards
+          </Link>
         </div>
       </div>
       <p className="text-muted-foreground">

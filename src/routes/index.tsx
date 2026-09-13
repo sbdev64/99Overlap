@@ -52,6 +52,9 @@ function Home() {
           <Link to="/search" className="text-sm underline">
             Search cards
           </Link>
+          <Link to="/shared" className="text-sm underline">
+            Shared cards
+          </Link>
           <Link to="/history" className="text-sm underline">
             Game history
           </Link>

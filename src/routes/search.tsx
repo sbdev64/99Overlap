@@ -22,9 +22,14 @@ function SearchPage() {
     <main>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Search cards</h1>
-        <Link to="/decks" className="text-sm underline">
-          View decks
-        </Link>
+        <div className="flex gap-4">
+          <Link to="/decks" className="text-sm underline">
+            View decks
+          </Link>
+          <Link to="/shared" className="text-sm underline">
+            Shared cards
+          </Link>
+        </div>
       </div>
       <p className="text-muted-foreground">
         Find a card by name across all your saved decks.
