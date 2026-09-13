@@ -143,11 +143,13 @@ question for planned decks.
 ## M6 — Statistics
 
 Scoped 2026-09-13, supersedes the "Stats & charts" idea below. Built on
-`@tanstack/react-charts` (real, actively published, pre-1.0 — pin an exact
-version).
+`@tanstack/charts` (its React adapter is the `/react` subpath — not the
+separate, older `@tanstack/react-charts` package; pre-1.0, pinned to
+0.18.0).
 
-- [ ] **Statistics dashboard: games, win rate, most-played decks/pods** —
-      new `/stats` page. (#65)
+- [x] **Statistics dashboard: games, win rate, most-played decks/pods** —
+      new `/stats` page; aggregation logic extracted to a pure, unit-tested
+      function (`src/lib/game-stats.ts`). (#65)
 - [ ] **Collection-level stats: color identity spread, mana curve, decks
       gathering dust** — second, more exploratory batch of charts on the
       same page. (#66)

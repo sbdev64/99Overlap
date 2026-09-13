@@ -29,6 +29,9 @@ function SearchPage() {
           <Link to="/shared" className="text-sm underline">
             Shared cards
           </Link>
+          <Link to="/stats" className="text-sm underline">
+            Statistics
+          </Link>
         </div>
       </div>
       <p className="text-muted-foreground">

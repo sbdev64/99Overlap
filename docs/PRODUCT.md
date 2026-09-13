@@ -227,6 +227,28 @@ detection in feature 4 above: same underlying "which decks have this
 card" query, just partitioned by deck type instead of surfacing every
 deck indiscriminately.
 
+### 11. Statistics dashboard (M6)
+
+A `/stats` page built on `@tanstack/charts` (not `@tanstack/react-charts` —
+that's a separate, older package; the current one's React adapter lives at
+the `@tanstack/charts/react` subpath, per its own docs). Reads the `Game`
+log from feature 9, aggregated server-side in `src/lib/game-stats.ts`
+(pure function, unit-tested) so the browser never needs the raw
+row-by-row reduction logic, only the four already-summarized shapes.
+
+Four charts, all built from a single `GameStats` aggregate:
+- **Games logged over time** — line chart, one point per month
+- **Most-played decks** — bar chart, count of games, descending
+- **Win rate per deck** — bar chart, same deck order as most-played so the
+  two read consistently side by side
+- **Most-played pods** — bar chart, count of games, descending
+
+Deck names are grouped by their denormalized `Game.deckName` snapshot
+(never re-keyed to the current `Deck.name`) since decks can't be renamed
+in this app — see feature 9's decision to snapshot the name at log time.
+Shows an explicit empty state ("no games logged yet") instead of rendering
+charts with zero data.
+
 ## Explicitly out of scope (for now)
 
 - Multi-user / auth / sharing decks with other people.
@@ -257,6 +279,7 @@ deck indiscriminately.
 | 2026-09-13 | Statistics milestone (#65-66) builds on `@tanstack/react-charts`, not a more mature charting library | User explicitly asked for a TanStack library to stay consistent with the rest of the stack (Router, Start, React Table for #69). Confirmed it's a real, actively published package (not abandoned) before committing to it in the issues, but it's pre-1.0 — expect some API churn when #65/#66 are picked up. |
 | 2026-09-13 | UI/UX visual direction: "retro flat magic / wizard-like" (#68), not a generic redesign | User's explicit direction — parchment/ink tones, a fantasy-adjacent display font, mana-color accents; flat, not skeuomorphic. Bundled with de-duplicating the nav (currently copy-pasted across five route files) since both are "how the app is laid out," not new features. |
 | 2026-09-13 | M5 (Improvements) closed same-day — deck classification, sectioned/filterable decks list, Planning decks' owned/need-to-buy check, deck metadata, keyboard shortcuts (#60-64) | Found and fixed a real bug while testing #63: `scryfall-enrich.ts` keyed lookup results by Scryfall's *returned* canonical name rather than the name actually queried, so any card where Scryfall's spelling differs in punctuation from the query (e.g. an apostrophe placed differently) silently never got enriched. Fixed by normalizing both sides before matching. Keyboard shortcuts (#64) could only be verified via SSR/build, not actual keydown behavior — no headless browser or DOM-testing setup in this environment; flagged for the user to confirm by hand. |
+| 2026-09-13 | Statistics dashboard (#65) uses `@tanstack/charts` + its `/react` subpath, not the separately-published `@tanstack/react-charts` package | Initially installed `@tanstack/react-charts` since it matched the name from earlier planning, but its bundled types have no usage examples and no README. Fetched the actual TanStack Charts docs (quick-start, bar/line examples) and confirmed the current, documented React entry point is `@tanstack/charts/react` — a subpath of the core grammar-of-graphics package, not the older same-org package. Swapped before writing any chart code. Verified real SSR output (correct SVG geometry matching aggregated data) before considering the integration trustworthy, given the library is pre-1.0 and internally quite complex (dozens of composable mark/scale/transform modules). |
 
 Add a row here whenever a product decision is made or changed — this table
 is more valuable than the code history for answering "why does it work this

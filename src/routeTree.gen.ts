@@ -14,6 +14,7 @@ import { Route as DecksRouteImport } from './routes/decks'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SharedRouteImport } from './routes/shared'
+import { Route as StatsRouteImport } from './routes/stats'
 import { Route as DecksIndexRouteImport } from './routes/decks.index'
 import { Route as DecksDeckIdRouteImport } from './routes/decks.$deckId'
 
@@ -42,6 +43,11 @@ const SharedRoute = SharedRouteImport.update({
   path: '/shared',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DecksIndexRoute = DecksIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/search': typeof SearchRoute
   '/shared': typeof SharedRoute
+  '/stats': typeof StatsRoute
   '/decks/$deckId': typeof DecksDeckIdRoute
   '/decks/': typeof DecksIndexRoute
 }
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/history': typeof HistoryRoute
   '/search': typeof SearchRoute
   '/shared': typeof SharedRoute
+  '/stats': typeof StatsRoute
   '/decks/$deckId': typeof DecksDeckIdRoute
   '/decks': typeof DecksIndexRoute
 }
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/search': typeof SearchRoute
   '/shared': typeof SharedRoute
+  '/stats': typeof StatsRoute
   '/decks/$deckId': typeof DecksDeckIdRoute
   '/decks/': typeof DecksIndexRoute
 }
@@ -88,10 +97,18 @@ export interface FileRouteTypes {
     | '/history'
     | '/search'
     | '/shared'
+    | '/stats'
     | '/decks/$deckId'
     | '/decks/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/history' | '/search' | '/shared' | '/decks/$deckId' | '/decks'
+  to:
+    | '/'
+    | '/history'
+    | '/search'
+    | '/shared'
+    | '/stats'
+    | '/decks/$deckId'
+    | '/decks'
   id:
     | '__root__'
     | '/'
@@ -99,6 +116,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/search'
     | '/shared'
+    | '/stats'
     | '/decks/$deckId'
     | '/decks/'
   fileRoutesById: FileRoutesById
@@ -109,6 +127,7 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   SearchRoute: typeof SearchRoute
   SharedRoute: typeof SharedRoute
+  StatsRoute: typeof StatsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -148,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SharedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/decks/': {
       id: '/decks/'
       path: '/'
@@ -183,6 +209,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   SearchRoute: SearchRoute,
   SharedRoute: SharedRoute,
+  StatsRoute: StatsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
