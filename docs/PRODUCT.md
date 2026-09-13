@@ -149,6 +149,14 @@ Overlapping cards that aren't marked shared stay highlighted but don't get
 move-tracking UI — the assumption is the user owns multiple physical
 copies, so no action is ever needed.
 
+The `/shared` overview page (#21, M3) lists every shared card across all
+decks in one place and — like `SharedCardPicker`'s own "Unmark as shared"
+action — can un-share a card directly from that list via `unmarkShared`
+(clears `isShared` and `currentDeckId`). Since every deck view reads a
+card's shared status live from the `Card` row, removing it here
+immediately stops that card showing up as shared anywhere, with no
+separate per-deck cleanup needed.
+
 ### 7. Card metadata enrichment (M3)
 
 Look up parsed card names against the [Scryfall API](https://scryfall.com/docs/api)
