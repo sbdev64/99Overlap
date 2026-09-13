@@ -69,24 +69,10 @@ function DecksPage() {
   return (
     <main>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Decks</h1>
-        <div className="flex gap-4">
-          <Link to="/" className="text-sm underline">
-            Import a new deck
-          </Link>
-          <Link to="/search" className="text-sm underline">
-            Search cards
-          </Link>
-          <Link to="/shared" className="text-sm underline">
-            Shared cards
-          </Link>
-          <Link to="/history" className="text-sm underline">
-            Game history
-          </Link>
-          <Link to="/stats" className="text-sm underline">
-            Statistics
-          </Link>
-        </div>
+        <h1 className="font-display font-semibold text-2xl">Decks</h1>
+        <Link to="/" className="text-sm underline">
+          Import a new deck
+        </Link>
       </div>
 
       {decks.length === 0 ? (

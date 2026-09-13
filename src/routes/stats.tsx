@@ -34,12 +34,7 @@ function StatsPage() {
 
   return (
     <main>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Statistics</h1>
-        <Link to="/history" className="text-sm underline">
-          Game history
-        </Link>
-      </div>
+      <h1 className="font-display font-semibold text-2xl">Statistics</h1>
       <p className="text-muted-foreground">
         Built from your {gameStats.totalGames} logged game
         {gameStats.totalGames === 1 ? '' : 's'}.

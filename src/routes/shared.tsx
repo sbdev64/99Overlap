@@ -11,17 +11,7 @@ function SharedCardsPage() {
 
   return (
     <main>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Shared cards</h1>
-        <div className="flex gap-4">
-          <Link to="/decks" className="text-sm underline">
-            View decks
-          </Link>
-          <Link to="/stats" className="text-sm underline">
-            Statistics
-          </Link>
-        </div>
-      </div>
+      <h1 className="font-display font-semibold text-2xl">Shared cards</h1>
       <p className="text-muted-foreground">
         Every card you own a single physical copy of and move between decks, and
         where it currently is.
