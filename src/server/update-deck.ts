@@ -38,7 +38,7 @@ export const updateDeck = createServerFn({ method: 'POST' })
       }
 
       // Replace this deck's cards entirely. Only this deck's DeckCard rows
-      // are removed — every Card row (and its isStaple/currentDeckId) and
+      // are removed — every Card row (and its isShared/currentDeckId) and
       // every other deck's DeckCard rows are untouched.
       // See docs/PRODUCT.md#2-update-a-deck.
       await tx.delete(deckCards).where(eq(deckCards.deckId, data.deckId))

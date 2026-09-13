@@ -3,7 +3,7 @@
  *
  * Only "commander" and "mainboard" entries are returned — sideboard,
  * maybeboard, companion, and tokens are parsed away, since they don't count
- * toward overlap/staple tracking. See
+ * toward overlap/shared-card tracking. See
  * docs/PRODUCT.md#boards-what-counts-toward-overlap.
  *
  * Moxfield's plain "copy the decklist text" output (confirmed against the

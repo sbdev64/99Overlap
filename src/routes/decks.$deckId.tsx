@@ -17,10 +17,21 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { type DeckCardEntry, getDeck } from '@/server/decks'
 import { deleteDeck } from '@/server/delete-deck'
+import { markShared } from '@/server/mark-shared'
 import { updateDeck } from '@/server/update-deck'
 
 export const Route = createFileRoute('/decks/$deckId')({
@@ -162,7 +173,8 @@ function DeckDetailPage() {
           <span className="rounded bg-amber-200 px-1 py-0.5 dark:bg-amber-900">
             Highlighted
           </span>{' '}
-          cards also appear in another deck.
+          cards also appear in another deck — click one to mark it as shared if
+          you move a single physical copy between decks.
         </p>
       )}
 
@@ -194,14 +206,126 @@ function DeckDetailPage() {
 }
 
 function CardLine({ card }: { card: DeckCardEntry }) {
-  return (
-    <li
-      className={cn(
-        'rounded px-1',
-        card.isOverlapping && 'bg-amber-200 dark:bg-amber-900',
-      )}
-    >
+  const label = (
+    <>
       {card.quantity} {card.name}
+      {card.isShared && (
+        <span className="ml-2 text-xs">
+          ★ shared
+          {card.currentDeckName ? ` — in ${card.currentDeckName}` : ''}
+        </span>
+      )}
+    </>
+  )
+
+  if (!card.isOverlapping) {
+    return <li className="rounded px-1">{label}</li>
+  }
+
+  return (
+    <li>
+      <SharedCardPicker card={card} label={label} />
     </li>
+  )
+}
+
+function SharedCardPicker({
+  card,
+  label,
+}: {
+  card: DeckCardEntry
+  label: React.ReactNode
+}) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [selectedDeckId, setSelectedDeckId] = useState(
+    card.currentDeckId ?? card.decksWithThisCard[0]?.id,
+  )
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleConfirm() {
+    if (!selectedDeckId) return
+    setPending(true)
+    setError(null)
+    try {
+      await markShared({
+        data: { cardId: card.cardId, currentDeckId: selectedDeckId },
+      })
+      setOpen(false)
+      await router.invalidate()
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to mark card as shared',
+      )
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (next) {
+          setSelectedDeckId(card.currentDeckId ?? card.decksWithThisCard[0]?.id)
+          setError(null)
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'w-full rounded px-1 text-left',
+            'bg-amber-200 dark:bg-amber-900',
+          )}
+        >
+          {label}
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Mark "{card.name}" as shared</DialogTitle>
+          <DialogDescription>
+            This card appears in multiple decks. If you only own one physical
+            copy and move it between decks, mark it here and say which deck
+            currently has it.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`shared-deck-${card.cardId}`}>Currently in</Label>
+          <select
+            id={`shared-deck-${card.cardId}`}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+            value={selectedDeckId}
+            onChange={(e) => setSelectedDeckId(Number(e.target.value))}
+          >
+            {card.decksWithThisCard.map((deckOption) => (
+              <option key={deckOption.id} value={deckOption.id}>
+                {deckOption.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {error && <p className="text-destructive text-sm">{error}</p>}
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={pending}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} disabled={pending}>
+            {pending ? 'Saving…' : 'Mark as shared'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

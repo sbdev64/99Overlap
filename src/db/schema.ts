@@ -34,12 +34,13 @@ export const cards = sqliteTable('cards', {
   typeLine: text('type_line'),
   colorIdentity: text('color_identity'),
   imageUrl: text('image_url'),
-  // Staple tracking (docs/PRODUCT.md#5 and #6): the user owns exactly one
-  // physical copy and moves it between decks by hand.
-  isStaple: integer('is_staple', { mode: 'boolean' }).notNull().default(false),
-  // Which deck currently physically holds this staple. Only meaningful when
-  // isStaple is true. Set to null automatically if that deck is deleted
-  // (docs/PRODUCT.md#3 / roadmap issue #17) rather than left dangling.
+  // Shared-card tracking (docs/PRODUCT.md#5 and #6): the user owns exactly
+  // one physical copy and moves it between decks by hand.
+  isShared: integer('is_shared', { mode: 'boolean' }).notNull().default(false),
+  // Which deck currently physically holds this shared card. Only meaningful
+  // when isShared is true. Set to null automatically if that deck is
+  // deleted (docs/PRODUCT.md#3 / roadmap issue #17) rather than left
+  // dangling.
   currentDeckId: integer('current_deck_id').references(() => decks.id, {
     onDelete: 'set null',
   }),
@@ -58,8 +59,8 @@ export const deckCards = sqliteTable(
       .notNull()
       .references(() => cards.id),
     quantity: integer('quantity').notNull().default(1),
-    // Only 'commander' and 'mainboard' count toward overlap/staple tracking
-    // (docs/PRODUCT.md#boards-what-counts-toward-overlap).
+    // Only 'commander' and 'mainboard' count toward overlap/shared-card
+    // tracking (docs/PRODUCT.md#boards-what-counts-toward-overlap).
     board: text('board', { enum: ['commander', 'mainboard'] }).notNull(),
   },
   (table) => [primaryKey({ columns: [table.deckId, table.cardId] })],
