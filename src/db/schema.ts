@@ -6,6 +6,7 @@ import {
   sqliteTable,
   text,
 } from 'drizzle-orm/sqlite-core'
+import { DECK_TYPES } from '@/lib/deck-type'
 
 /**
  * A saved Commander deck. See docs/PRODUCT.md#core-domain-model.
@@ -13,6 +14,9 @@ import {
 export const decks = sqliteTable('decks', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
+  // 'planning' = wanted but not physically owned; doesn't count toward
+  // "owned" for the already-own-this-card check (docs/PRODUCT.md#10).
+  type: text('type', { enum: DECK_TYPES }).notNull().default('custom'),
   // Display-only fields derived from the parsed decklist, not used for matching logic.
   commanderName: text('commander_name'),
   colorIdentity: text('color_identity'),
