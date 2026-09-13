@@ -36,6 +36,13 @@ const OBEKA_EXPORT = `1 Obeka, Splitter of Seconds (OTJ) 222
 1 Aarakocra Sneak (CLB) 54
 1 Aether Tunnel (M19) 43`
 
+// A real Partner deck paste: two commanders as the first two lines, no
+// header distinguishing them from the mainboard.
+const KEDISS_MALCOLM_EXPORT = `1 Kediss, Emberclaw Familiar (CMR) 188
+1 Malcolm, Keen-Eyed Navigator (LCC) 161
+1 Abrade (TDC) 203
+1 Alchemist's Gambit (VOW) 140`
+
 describe('parseDecklist', () => {
   test('parses a Moxfield export with set codes and a Commander section', () => {
     const result = parseDecklist(ATRAXA_EXPORT)
@@ -153,6 +160,52 @@ describe('parseDecklist', () => {
 
     expect(result.entries).toEqual([
       { name: 'Arcane Signet', quantity: 1, board: 'commander' },
+    ])
+  })
+
+  test('with commanderCount: 2, treats the first two lines as commanders (real Partner deck paste)', () => {
+    const result = parseDecklist(KEDISS_MALCOLM_EXPORT, { commanderCount: 2 })
+
+    expect(result.commanderNames).toEqual([
+      'Kediss, Emberclaw Familiar',
+      'Malcolm, Keen-Eyed Navigator',
+    ])
+    expect(result.entries).toEqual([
+      {
+        name: 'Kediss, Emberclaw Familiar',
+        quantity: 1,
+        board: 'commander',
+      },
+      {
+        name: 'Malcolm, Keen-Eyed Navigator',
+        quantity: 1,
+        board: 'commander',
+      },
+      { name: 'Abrade', quantity: 1, board: 'mainboard' },
+      { name: "Alchemist's Gambit", quantity: 1, board: 'mainboard' },
+    ])
+  })
+
+  test('without commanderCount, a two-commander paste only treats the first line as commander (default unaffected)', () => {
+    const result = parseDecklist(KEDISS_MALCOLM_EXPORT)
+
+    expect(result.commanderNames).toEqual(['Kediss, Emberclaw Familiar'])
+    expect(result.entries).toContainEqual({
+      name: 'Malcolm, Keen-Eyed Navigator',
+      quantity: 1,
+      board: 'mainboard',
+    })
+  })
+
+  test('an explicit Commander header takes priority over commanderCount', () => {
+    const result = parseDecklist(
+      'Commander\n1 Kediss, Emberclaw Familiar\n1 Malcolm, Keen-Eyed Navigator\n\nDeck\n1 Abrade',
+      { commanderCount: 1 },
+    )
+
+    expect(result.commanderNames).toEqual([
+      'Kediss, Emberclaw Familiar',
+      'Malcolm, Keen-Eyed Navigator',
     ])
   })
 

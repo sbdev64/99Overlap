@@ -10,6 +10,12 @@ export const decks = sqliteTable('decks', {
   // Display-only fields derived from the parsed decklist, not used for matching logic.
   commanderName: text('commander_name'),
   colorIdentity: text('color_identity'),
+  // How many of the leading card lines are commanders when the pasted text
+  // has no explicit "Commander" header — 1 normally, 2 for Partner/
+  // Background decks. Set by the user (checkbox on import/edit) since the
+  // parser can't tell from the text alone. See docs/PRODUCT.md#5b and
+  // src/lib/decklist-parser.ts.
+  commanderCount: integer('commander_count').notNull().default(1),
   // Last raw pasted decklist, kept so re-imports can diff/replace this deck's cards.
   sourceText: text('source_text').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' })

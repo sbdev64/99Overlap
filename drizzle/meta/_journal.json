@@ -15,6 +15,13 @@
       "when": 1789293495697,
       "tag": "0001_workable_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789298271870,
+      "tag": "0002_zippy_raza",
+      "breakpoints": true
     }
   ]
 }

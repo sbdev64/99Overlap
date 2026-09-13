@@ -7,6 +7,9 @@ import { insertDeckCards } from './deck-card-sync'
 const importDeckSchema = z.object({
   name: z.string().trim().min(1, 'Deck name is required'),
   sourceText: z.string().trim().min(1, 'Paste a decklist first'),
+  // 2 for Partner/Background decks (two commander lines, no header). See
+  // src/lib/decklist-parser.ts.
+  commanderCount: z.union([z.literal(1), z.literal(2)]).default(1),
 })
 
 export interface ImportDeckResult {
@@ -29,7 +32,9 @@ export const importDeck = createServerFn({ method: 'POST' })
     // decision log in docs/PRODUCT.md.
     const { db } = await import('@/db/client')
 
-    const parsed = parseDecklist(data.sourceText)
+    const parsed = parseDecklist(data.sourceText, {
+      commanderCount: data.commanderCount,
+    })
 
     return db.transaction(async (tx) => {
       const [deck] = await tx
@@ -38,6 +43,7 @@ export const importDeck = createServerFn({ method: 'POST' })
           name: data.name,
           commanderName: parsed.commanderNames.join(', ') || null,
           sourceText: data.sourceText,
+          commanderCount: data.commanderCount,
         })
         .returning()
 

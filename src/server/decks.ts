@@ -65,6 +65,8 @@ export interface DeckDetail {
   name: string
   commanderName: string | null
   sourceText: string
+  /** 1, or 2 for Partner/Background decks. See src/lib/decklist-parser.ts. */
+  commanderCount: number
   cards: DeckCardEntry[]
 }
 
@@ -146,6 +148,7 @@ export const getDeck = createServerFn({ method: 'GET' })
       name: deck.name,
       commanderName: deck.commanderName,
       sourceText: deck.sourceText,
+      commanderCount: deck.commanderCount,
       cards,
     }
   })
