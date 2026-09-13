@@ -159,18 +159,13 @@ function DeckDetailPage() {
           <p className="text-muted-foreground text-sm">
             Grab these from where they currently are before you play this deck.
           </p>
-          <ul className="mt-2 flex flex-col gap-1">
+          <ul className="mt-2 flex flex-col gap-2">
             {missingShared.map((card) => (
-              <li key={card.cardId}>
-                {card.name} — currently in{' '}
-                <Link
-                  to="/decks/$deckId"
-                  params={{ deckId: String(card.currentDeckId) }}
-                  className="font-medium underline"
-                >
-                  {card.currentDeckName}
-                </Link>
-              </li>
+              <MissingSharedCardRow
+                key={card.cardId}
+                card={card}
+                deckId={deck.id}
+              />
             ))}
           </ul>
         </section>
@@ -235,6 +230,56 @@ function DeckDetailPage() {
         </ul>
       </section>
     </main>
+  )
+}
+
+function MissingSharedCardRow({
+  card,
+  deckId,
+}: {
+  card: DeckCardEntry
+  deckId: number
+}) {
+  const router = useRouter()
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleMoveHere() {
+    setPending(true)
+    setError(null)
+    try {
+      await markShared({ data: { cardId: card.cardId, currentDeckId: deckId } })
+      await router.invalidate()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to move card')
+      setPending(false)
+    }
+  }
+
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-2">
+      <span>
+        {card.name} — currently in{' '}
+        <Link
+          to="/decks/$deckId"
+          params={{ deckId: String(card.currentDeckId) }}
+          className="font-medium underline"
+        >
+          {card.currentDeckName}
+        </Link>
+      </span>
+      <span className="flex items-center gap-2">
+        {error && <span className="text-destructive text-xs">{error}</span>}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleMoveHere}
+          disabled={pending}
+        >
+          {pending ? 'Moving…' : 'Move here'}
+        </Button>
+      </span>
+    </li>
   )
 }
 
