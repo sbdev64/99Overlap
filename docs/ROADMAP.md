@@ -47,15 +47,18 @@ Goal: mark a card as shared and always know what to physically move.
 
 - [x] **Mark card as shared** — clicking a highlighted card in a deck view
       opens a picker to set `isShared = true` and choose `currentDeckId`.
-- [ ] **Unmark a shared card** — revert `isShared`, clear `currentDeckId`.
-- [ ] **"Missing shared cards" panel on deck detail page** — lists shared
+- [x] **Unmark a shared card** — revert `isShared`, clear `currentDeckId`.
+- [x] **"Missing shared cards" panel on deck detail page** — lists shared
       cards this deck needs whose `currentDeckId` points elsewhere, naming
       that deck.
-- [ ] **"Move here" action** — one click sets `currentDeckId` to the
+- [x] **"Move here" action** — one click sets `currentDeckId` to the
       currently viewed deck.
-- [ ] **Handle deleting a deck that holds a shared card** — the card becomes
+- [x] **Handle deleting a deck that holds a shared card** — the card becomes
       unassigned and is flagged for the user across the app (not silently
       dropped).
+- [x] **Partner/Background (two-commander) decks** — `commanderCount`
+      checkbox on import/edit tells the parser how many leading lines are
+      commanders, since it can't tell from the text alone. Closed out M1.
 
 ## M3 — Polish
 
@@ -72,15 +75,53 @@ Goal: mark a card as shared and always know what to physically move.
 - [ ] **All-shared-cards overview page** — one place listing every shared
       card and its current deck, independent of any single deck view.
 
-## M4 — Ship it
+## M4 — History
 
-- [ ] **Dockerfile / deployment docs** — pick and document the actual
-      self-hosting target (see [STACK.md](STACK.md#open-items-to-confirm-once-we-start-scaffolding)).
-- [ ] **Backup story** — document (or script) copying the SQLite file.
-- [ ] **README pass** — update root README with real setup/usage
-      instructions once the app exists.
+Goal: replace the user's manual Google Sheet game log with a table in the
+app — add/edit/delete a row with date, deck, pod, and win/loss. Two
+purposes: (1) see when each deck was last played, as a cross-check
+alongside the shared-card location tracking from M2; (2) lay groundwork for
+a later stats/charts milestone (see "Future milestones" below — not built
+in M4 itself).
+
+Design still being discussed (2026-09-13) — exact schema and issue list to
+follow once resolved:
+- How "pod" (the user's regular playgroups) is represented — free text with
+  autocomplete vs. a small managed list.
+- Whether logging a game should ever automatically update a shared card's
+  `currentDeckId`, or stay a read-only log that's purely informational
+  alongside the existing manual tracking. Leaning toward the latter, since
+  auto-updating from a backfilled historical entry (not the most recent
+  game overall) could silently make the shared-card tracking wrong.
+
+## Future milestones (not yet scheduled)
+
+Noted so they aren't lost, but deliberately not ordered yet — the user
+wants to use the product through M4 before deciding what's next.
+
+- **UI enhancement / rework** — general UI/UX polish once more of the app
+  exists to react to. GitHub milestone created, not yet scoped.
+- **Stats & charts** — games per year/month, most-played decks, win rate,
+  etc., built on top of M4's game log.
+- **Deck metadata / collection tracker** — a second thing the user
+  currently tracks in the same Google Sheet: per-deck info beyond the
+  decklist itself (commander(s), build status/"planned" decks that don't
+  exist yet, colors, box color, sleeve color, archetype). Not scoped yet.
+
+## Ship it (postponed, unmilestoned)
+
+Deliberately not attached to a milestone right now — more milestones are
+coming before shipping is revisited, and guessing a milestone number for
+this today isn't worth it. The issues stay open and tracked, just without a
+milestone:
+
+- **Dockerfile / deployment docs** — pick and document the actual
+  self-hosting target (see [STACK.md](STACK.md#open-items-to-confirm-once-we-start-scaffolding)).
+- **Backup story** — document (or script) copying the SQLite file.
+- **README pass** — update root README with real setup/usage instructions
+  once the app exists.
 
 ## Suggested GitHub labels
 
 `type:feature`, `type:bug`, `type:chore`, `type:docs`, `area:import`,
-`area:shared`, `area:ui`, `area:infra`.
+`area:shared`, `area:ui`, `area:infra`, `area:history` (new, for M4).
