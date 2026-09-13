@@ -47,14 +47,13 @@ function DeckDetailPage() {
   const commanders = deck.cards.filter((card) => card.board === 'commander')
   const mainboard = deck.cards.filter((card) => card.board === 'mainboard')
   const hasOverlap = deck.cards.some((card) => card.isOverlapping)
-  // Shared cards this deck needs that are currently sitting in another deck.
-  // This is the feature that fulfills the app's actual mission — see
-  // docs/PRODUCT.md#6-tracking-a-shared-cards-location--the-what-do-i-move-view.
+  // Shared cards this deck needs that are currently sitting in another deck
+  // — or, if that deck was deleted, whose location is now unknown (`null`).
+  // Either way this deck can't assume it has the card, so it's flagged the
+  // same way. This is the feature that fulfills the app's actual mission —
+  // see docs/PRODUCT.md#6-tracking-a-shared-cards-location--the-what-do-i-move-view.
   const missingShared = deck.cards.filter(
-    (card) =>
-      card.isShared &&
-      card.currentDeckId !== null &&
-      card.currentDeckId !== deck.id,
+    (card) => card.isShared && card.currentDeckId !== deck.id,
   )
 
   const [editing, setEditing] = useState(false)
@@ -259,14 +258,23 @@ function MissingSharedCardRow({
   return (
     <li className="flex flex-wrap items-center justify-between gap-2">
       <span>
-        {card.name} — currently in{' '}
-        <Link
-          to="/decks/$deckId"
-          params={{ deckId: String(card.currentDeckId) }}
-          className="font-medium underline"
-        >
-          {card.currentDeckName}
-        </Link>
+        {card.name} —{' '}
+        {card.currentDeckId !== null ? (
+          <>
+            currently in{' '}
+            <Link
+              to="/decks/$deckId"
+              params={{ deckId: String(card.currentDeckId) }}
+              className="font-medium underline"
+            >
+              {card.currentDeckName}
+            </Link>
+          </>
+        ) : (
+          <span className="font-medium text-destructive">
+            location unknown (its deck was deleted)
+          </span>
+        )}
       </span>
       <span className="flex items-center gap-2">
         {error && <span className="text-destructive text-xs">{error}</span>}
@@ -288,9 +296,16 @@ function CardLine({ card }: { card: DeckCardEntry }) {
     <>
       {card.quantity} {card.name}
       {card.isShared && (
-        <span className="ml-2 text-xs">
-          ★ shared
-          {card.currentDeckName ? ` — in ${card.currentDeckName}` : ''}
+        <span
+          className={cn(
+            'ml-2 text-xs',
+            card.currentDeckId === null && 'font-medium text-destructive',
+          )}
+        >
+          ★ shared —{' '}
+          {card.currentDeckName
+            ? `in ${card.currentDeckName}`
+            : 'location unknown'}
         </span>
       )}
     </>

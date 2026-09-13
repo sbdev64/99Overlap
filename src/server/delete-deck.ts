@@ -11,8 +11,9 @@ const deleteDeckSchema = z.object({
  * Deletes a Deck. Its DeckCard rows cascade-delete at the DB level (see the
  * `onDelete: 'cascade'` FK in src/db/schema.ts); every Card row persists,
  * since other decks may still reference it. If this deck was a shared card's
- * `currentDeckId`, that FK's `onDelete: 'set null'` clears it automatically
- * — surfacing that to the user is issue #17 (M2), not this one.
+ * `currentDeckId`, that FK's `onDelete: 'set null'` clears it automatically,
+ * and every deck that still lists the card flags it as "location unknown"
+ * (src/routes/decks.$deckId.tsx) until someone marks where it actually is.
  * See docs/PRODUCT.md#3-delete-a-deck.
  */
 export const deleteDeck = createServerFn({ method: 'POST' })
