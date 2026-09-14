@@ -78,14 +78,19 @@ const VIEW_MODE_OPTIONS: { value: ViewMode; label: string }[] = [
 // Every card <li> in text mode gets a little breathing room below it.
 const TEXT_LI_CLASS = 'mb-1'
 
-// Text mode's mainboard layout: each type group is one CSS grid column of
-// its own — never split across columns, never sharing a column with another
-// group — and groups wrap onto further rows as the viewport allows. See
-// roadmap issue #107 (a correction of #99/#93: a flowing multi-column text
-// layout let short groups merge into the same column, which wasn't wanted —
-// one column per type is clearer at a glance).
-const TEXT_MAINBOARD_CLASS =
-  'grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-x-6'
+// Text mode's mainboard layout: a flowing CSS multi-column container, so
+// groups pack top-to-bottom into whichever column has room next instead of
+// being placed strictly row-by-row — a CSS Grid (#107) pushed later groups
+// (Enchantments, Lands, ...) far down the page whenever an earlier row's
+// tallest group left unused space in its shorter neighbors. Each group is
+// still a clearly bounded, bordered box with `break-inside: avoid-column`
+// so it never visually splits across a column break, and two groups sharing
+// a column stay unambiguous — addressing the original complaint about #99
+// that #107 had overcorrected for. See roadmap issue #112.
+const TEXT_MAINBOARD_STYLE: React.CSSProperties = {
+  columns: '4 16rem',
+  columnGap: '1rem',
+}
 
 function DeckDetailPage() {
   const deck = Route.useLoaderData()
@@ -448,9 +453,16 @@ function DeckDetailPage() {
             </div>
           </div>
         </div>
-        <div className={viewMode === 'text' ? TEXT_MAINBOARD_CLASS : undefined}>
+        <div style={viewMode === 'text' ? TEXT_MAINBOARD_STYLE : undefined}>
           {mainboardGroups.map((group) => (
-            <div key={group.label} className="mt-3">
+            <div
+              key={group.label}
+              className={
+                viewMode === 'text'
+                  ? 'mb-4 break-inside-avoid-column rounded-md border border-border p-3'
+                  : 'mt-3'
+              }
+            >
               <h3 className="text-muted-foreground text-xs uppercase tracking-wide">
                 {group.label} ({sumQuantity(group.cards)})
               </h3>
@@ -458,7 +470,7 @@ function DeckDetailPage() {
                 className={
                   viewMode === 'visual'
                     ? 'mt-1 flex flex-wrap gap-3'
-                    : 'mt-1 flex flex-col'
+                    : 'mt-2 flex flex-col'
                 }
               >
                 {group.cards.map((card) =>
