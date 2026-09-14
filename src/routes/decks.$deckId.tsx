@@ -455,7 +455,7 @@ function DeckDetailPage() {
       )}
 
       <section className="mt-6">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-4">
           <h2 className="font-medium text-sm uppercase tracking-wide">
             Mainboard ({sumQuantity(mainboard)})
           </h2>
