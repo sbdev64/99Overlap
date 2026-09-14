@@ -39,10 +39,18 @@ export interface CardEnrichment {
   typeLine: string | null
   colorIdentity: string
   imageUrl: string | null
+  backImageUrl: string | null
 }
 
 function toEnrichment(card: ScryfallCard): CardEnrichment {
   const frontFace = card.card_faces?.[0]
+  // Only a true double-faced card (transform/modal DFC/meld) has a second
+  // face with its own image — confirmed against the real API: those faces
+  // each carry `image_uris`, while split/Room/Adventure-type cards (which
+  // also use `card_faces`, but print as one image) have a top-level
+  // `image_uris` and no per-face one, so this naturally resolves to null for
+  // them. See roadmap issue #101.
+  const backFace = card.card_faces?.[1]
   return {
     scryfallId: card.id,
     manaCost: card.mana_cost ?? frontFace?.mana_cost ?? null,
@@ -52,6 +60,7 @@ function toEnrichment(card: ScryfallCard): CardEnrichment {
       card.color_identity?.includes(c),
     ).join(','),
     imageUrl: card.image_uris?.normal ?? frontFace?.image_uris?.normal ?? null,
+    backImageUrl: backFace?.image_uris?.normal ?? null,
   }
 }
 

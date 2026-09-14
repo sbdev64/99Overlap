@@ -65,6 +65,11 @@ export const cards = sqliteTable('cards', {
   // for colorless. From Scryfall's `color_identity` array.
   colorIdentity: text('color_identity'),
   imageUrl: text('image_url'),
+  // A double-faced card's (transform/modal DFC/meld) back face image — from
+  // Scryfall's `card_faces[1].image_uris`. Null for single-faced cards and
+  // for split/Room/Adventure-type cards, which print as one image and have
+  // nothing to flip to. See roadmap issue #101.
+  backImageUrl: text('back_image_url'),
   // Shared-card tracking (docs/PRODUCT.md#5 and #6): the user owns exactly
   // one physical copy and moves it between decks by hand.
   isShared: integer('is_shared', { mode: 'boolean' }).notNull().default(false),
