@@ -48,6 +48,7 @@ import { GROUP_BY_OPTIONS, type GroupBy, groupCards } from '@/lib/card-grouping'
 import { COLOR_ORDER, colorIdentityName } from '@/lib/colors'
 import { toDisplayDate } from '@/lib/date-format'
 import { DECK_TYPE_LABELS, DECK_TYPES, type DeckType } from '@/lib/deck-type'
+import { exportDecklist } from '@/lib/decklist-export'
 import { cn } from '@/lib/utils'
 import { type DeckCardEntry, type DeckDetail, getDeck } from '@/server/decks'
 import { deleteDeck } from '@/server/delete-deck'
@@ -200,6 +201,7 @@ function DeckDetailPage() {
         </div>
         {!editing && (
           <div className="flex gap-2">
+            <ExportDecklistButton cards={deck.cards} />
             <Button
               variant="outline"
               onClick={() => {
@@ -585,6 +587,26 @@ function ColorSwatch({ label, color }: { label: string; color: string }) {
       />
       {label}
     </span>
+  )
+}
+
+/** Copies the deck's current cards to the clipboard as Moxfield-style plain
+ * text (see `exportDecklist`) — a backup, or to paste elsewhere. See roadmap
+ * issue #123. */
+function ExportDecklistButton({ cards }: { cards: DeckCardEntry[] }) {
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy() {
+    const text = exportDecklist(cards)
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <Button variant="outline" onClick={handleCopy}>
+      {copied ? 'Copied!' : 'Copy decklist'}
+    </Button>
   )
 }
 
