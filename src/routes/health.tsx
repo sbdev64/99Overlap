@@ -1,7 +1,19 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
+  deleteUnenrichedCard,
   getUnenrichedCards,
   retryEnrichment,
   type UnenrichedCard,
@@ -70,6 +82,7 @@ function HealthPage() {
 function UnenrichedCardRow({ card }: { card: UnenrichedCard }) {
   const router = useRouter()
   const [pending, setPending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleRetry() {
@@ -84,6 +97,18 @@ function UnenrichedCardRow({ card }: { card: UnenrichedCard }) {
     }
   }
 
+  async function handleDelete() {
+    setDeleting(true)
+    setError(null)
+    try {
+      await deleteUnenrichedCard({ data: { cardId: card.id } })
+      await router.invalidate()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete')
+      setDeleting(false)
+    }
+  }
+
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3">
       <div>
@@ -95,14 +120,50 @@ function UnenrichedCardRow({ card }: { card: UnenrichedCard }) {
         </p>
         {error && <p className="text-destructive text-xs">{error}</p>}
       </div>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={handleRetry}
-        disabled={pending}
-      >
-        {pending ? 'Retrying…' : 'Retry'}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleRetry}
+          disabled={pending || deleting}
+        >
+          {pending ? 'Retrying…' : 'Retry'}
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={pending || deleting}
+            >
+              Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete "{card.name}"?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {card.deckNames.length > 0
+                  ? `This also removes it from ${card.deckNames.join(', ')}.`
+                  : "This card isn't in any deck."}{' '}
+                This can't be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleDelete()
+                }}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </li>
   )
 }
