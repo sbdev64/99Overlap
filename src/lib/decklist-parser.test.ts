@@ -106,6 +106,28 @@ describe('parseDecklist', () => {
     })
   })
 
+  test("warns when a set code outside SET_SUFFIX's 2-6 char range leaves a residual parenthesis", () => {
+    // Defense in depth for whatever edge case we haven't hit yet — see
+    // roadmap issue #121.
+    const result = parseDecklist('1 Some Card (VERYLONGCODE) 123', {
+      commanderCount: 0,
+    })
+
+    expect(result.entries).toContainEqual({
+      name: 'Some Card (VERYLONGCODE) 123',
+      quantity: 1,
+      board: 'mainboard',
+    })
+    expect(result.warnings).toContainEqual(
+      expect.stringContaining('Some Card (VERYLONGCODE) 123'),
+    )
+  })
+
+  test('does not warn on a normal Moxfield export with set codes stripped cleanly', () => {
+    const result = parseDecklist(ATRAXA_EXPORT)
+    expect(result.warnings).toEqual([])
+  })
+
   test('parses a bare-format export (no set codes) with an explicit Commander header', () => {
     const result = parseDecklist(VOJA_EXPORT)
 

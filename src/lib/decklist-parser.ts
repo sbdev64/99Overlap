@@ -85,6 +85,14 @@ const CARD_LINE = /^(\d+)\s*x?\s+(.+)$/i
 // roadmap issue #113, confirmed this left the whole suffix stuck to the
 // name, which then could never match on Scryfall).
 const SET_SUFFIX = /^(.+?)\s+\([A-Za-z0-9]{2,6}\)(?:\s+\S+)*\s*$/
+// Sanity check for whatever SET_SUFFIX doesn't handle: a real card name
+// essentially never contains a parenthesis at all, so if one survives into
+// the parsed name, something didn't get stripped correctly (e.g. a set code
+// outside the 2-6 char range SET_SUFFIX expects) — warn instead of silently
+// importing a name that can never match on Scryfall. See roadmap issue #121
+// (defense in depth after #113, where a foil marker after the collector
+// number broke stripping entirely).
+const RESIDUAL_PAREN = /[()]/
 
 function normalizeHeader(line: string) {
   return line.toLowerCase().replace(/:$/, '')
@@ -134,6 +142,12 @@ export function parseDecklist(
     const setMatch = SET_SUFFIX.exec(rest)
     const name = (setMatch ? setMatch[1] : rest).trim()
     if (!name) continue
+
+    if (RESIDUAL_PAREN.test(name)) {
+      warnings.push(
+        `"${name}" still looks like it has set/collector info attached — check the parsed name`,
+      )
+    }
 
     // With no explicit "Commander" header anywhere in the input, the first
     // `commanderCount` card lines in the whole paste are the commander(s)
