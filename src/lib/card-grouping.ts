@@ -15,13 +15,14 @@ export interface CardGroup {
 }
 
 // Precedence order for classifying a card with more than one of these
-// words in its type line (e.g. "Artifact Creature" groups as Creature),
-// matching Moxfield's convention. See docs/PRODUCT.md#8.
+// words in its type line (e.g. "Planeswalker Creature" groups as
+// Planeswalker) and for section display order. User's explicit preference
+// — see roadmap issue #90.
 const TYPE_PRECEDENCE = [
-  'Creature',
   'Planeswalker',
-  'Instant',
+  'Creature',
   'Sorcery',
+  'Instant',
   'Artifact',
   'Enchantment',
   'Land',
