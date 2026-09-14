@@ -114,8 +114,7 @@ function SharedCardRow({
           {error && <span className="text-destructive text-xs">{error}</span>}
           <Button
             size="sm"
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
+            variant="destructive"
             onClick={handleRemove}
             disabled={pending}
           >
