@@ -78,9 +78,13 @@ const SECTION_HEADERS: Record<string, TrackedBoard | IgnoredBoard> = {
 
 // `4 Card Name` or `4x Card Name`
 const CARD_LINE = /^(\d+)\s*x?\s+(.+)$/i
-// Strips a trailing `(SETCODE) collector#` suffix (and any foil marker after
-// it), e.g. `Sol Ring (SLD) 123★` -> `Sol Ring`.
-const SET_SUFFIX = /^(.+?)\s+\([A-Za-z0-9]{2,6}\)(?:\s+\S+)?\s*$/
+// Strips a trailing `(SETCODE)` and everything after it — a collector
+// number, a foil marker, or both (e.g. `Sol Ring (SLD) 123★` -> `Sol Ring`,
+// and `Herald's Horn (FIC) 228 *F*` -> `Herald's Horn`; a collector number
+// *and* a separate foil marker are two trailing tokens, not one — see
+// roadmap issue #113, confirmed this left the whole suffix stuck to the
+// name, which then could never match on Scryfall).
+const SET_SUFFIX = /^(.+?)\s+\([A-Za-z0-9]{2,6}\)(?:\s+\S+)*\s*$/
 
 function normalizeHeader(line: string) {
   return line.toLowerCase().replace(/:$/, '')
