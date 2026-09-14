@@ -19,6 +19,7 @@ const NAV_LINKS = [
   { to: '/shared', label: 'Shared' },
   { to: '/history', label: 'History' },
   { to: '/stats', label: 'Statistics' },
+  { to: '/health', label: 'Health' },
 ] as const
 
 /** Persistent header rendered once from the root route — replaces the nav
