@@ -75,24 +75,17 @@ const VIEW_MODE_OPTIONS: { value: ViewMode; label: string }[] = [
   { value: 'visual', label: 'Visual spoiler' },
 ]
 
-// Extra classes every text-mode card <li> needs: keep a card's line intact
-// instead of splitting across columns, and space consecutive lines within a
-// column (CSS multi-column layout doesn't support `gap` between stacked
-// items the way flexbox does). See roadmap issue #93.
-const TEXT_LI_CLASS = 'mb-1 break-inside-avoid-column'
+// Every card <li> in text mode gets a little breathing room below it.
+const TEXT_LI_CLASS = 'mb-1'
 
-// Text mode's mainboard layout: the whole section (every group's heading +
-// card list) flows through one CSS multi-column container, Moxfield-style —
-// short groups pack together in the same column instead of each getting its
-// own, and the whole decklist is visible with less scrolling. `columns: 4
-// 14rem` caps it at 4 columns of at least 14rem, and within that cap the
-// browser narrows the actual column count to fit the viewport, so this also
-// reflows down to a single column at phone width. See roadmap issue #99 (a
-// correction of #93 — a per-group column count wasn't what was wanted).
-const TEXT_MAINBOARD_STYLE: React.CSSProperties = {
-  columns: '4 14rem',
-  columnGap: '1.5rem',
-}
+// Text mode's mainboard layout: each type group is one CSS grid column of
+// its own — never split across columns, never sharing a column with another
+// group — and groups wrap onto further rows as the viewport allows. See
+// roadmap issue #107 (a correction of #99/#93: a flowing multi-column text
+// layout let short groups merge into the same column, which wasn't wanted —
+// one column per type is clearer at a glance).
+const TEXT_MAINBOARD_CLASS =
+  'grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-x-6'
 
 function DeckDetailPage() {
   const deck = Route.useLoaderData()
@@ -173,7 +166,7 @@ function DeckDetailPage() {
   }
 
   return (
-    <main>
+    <main style={{ '--main-width': '80rem' } as React.CSSProperties}>
       <Link to="/decks" className="text-sm underline">
         ← All decks
       </Link>
@@ -455,15 +448,17 @@ function DeckDetailPage() {
             </div>
           </div>
         </div>
-        <div style={viewMode === 'text' ? TEXT_MAINBOARD_STYLE : undefined}>
+        <div className={viewMode === 'text' ? TEXT_MAINBOARD_CLASS : undefined}>
           {mainboardGroups.map((group) => (
             <div key={group.label} className="mt-3">
-              <h3 className="break-after-avoid-column text-muted-foreground text-xs uppercase tracking-wide">
+              <h3 className="text-muted-foreground text-xs uppercase tracking-wide">
                 {group.label} ({sumQuantity(group.cards)})
               </h3>
               <ul
                 className={
-                  viewMode === 'visual' ? 'mt-1 flex flex-wrap gap-3' : 'mt-1'
+                  viewMode === 'visual'
+                    ? 'mt-1 flex flex-wrap gap-3'
+                    : 'mt-1 flex flex-col'
                 }
               >
                 {group.cards.map((card) =>
