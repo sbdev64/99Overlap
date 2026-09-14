@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DecksRouteImport } from './routes/decks'
+import { Route as HealthRouteImport } from './routes/health'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SharedRouteImport } from './routes/shared'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const DecksRoute = DecksRouteImport.update({
   id: '/decks',
   path: '/decks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -62,6 +68,7 @@ const DecksDeckIdRoute = DecksDeckIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/decks': typeof DecksRouteWithChildren
+  '/health': typeof HealthRoute
   '/history': typeof HistoryRoute
   '/search': typeof SearchRoute
   '/shared': typeof SharedRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/health': typeof HealthRoute
   '/history': typeof HistoryRoute
   '/search': typeof SearchRoute
   '/shared': typeof SharedRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/decks': typeof DecksRouteWithChildren
+  '/health': typeof HealthRoute
   '/history': typeof HistoryRoute
   '/search': typeof SearchRoute
   '/shared': typeof SharedRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/decks'
+    | '/health'
     | '/history'
     | '/search'
     | '/shared'
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/health'
     | '/history'
     | '/search'
     | '/shared'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/decks'
+    | '/health'
     | '/history'
     | '/search'
     | '/shared'
@@ -124,6 +136,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DecksRoute: typeof DecksRouteWithChildren
+  HealthRoute: typeof HealthRoute
   HistoryRoute: typeof HistoryRoute
   SearchRoute: typeof SearchRoute
   SharedRoute: typeof SharedRoute
@@ -144,6 +157,13 @@ declare module '@tanstack/react-router' {
       path: '/decks'
       fullPath: '/decks'
       preLoaderRoute: typeof DecksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -206,6 +226,7 @@ const DecksRouteWithChildren = DecksRoute._addFileChildren(DecksRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DecksRoute: DecksRouteWithChildren,
+  HealthRoute: HealthRoute,
   HistoryRoute: HistoryRoute,
   SearchRoute: SearchRoute,
   SharedRoute: SharedRoute,
