@@ -21,6 +21,11 @@ export interface DeckSummary {
    * enriched (#18); null until then or if there's no commander. See
    * roadmap issue #67. */
   commanderImageUrl: string | null
+  /** Auto-derived from the commander(s)' enriched color identity; null
+   * until they're enriched. See docs/PRODUCT.md#10. */
+  colorIdentity: string | null
+  archetype: string | null
+  secondaryArchetype: string | null
 }
 
 export const listDecks = createServerFn({ method: 'GET' }).handler(
@@ -36,6 +41,9 @@ export const listDecks = createServerFn({ method: 'GET' }).handler(
         type: decks.type,
         commanderName: decks.commanderName,
         createdAt: decks.createdAt,
+        colorIdentity: decks.colorIdentity,
+        archetype: decks.archetype,
+        secondaryArchetype: decks.secondaryArchetype,
       })
       .from(decks)
       // createdAt has only second-level precision, so two decks imported in
@@ -134,6 +142,7 @@ export interface DeckDetail {
   boxColor: string | null
   sleeveColor: string | null
   archetype: string | null
+  secondaryArchetype: string | null
   cards: DeckCardEntry[]
   /** MAX(date) over this deck's logged games, or null if never played. See
    * docs/PRODUCT.md#9-game-history-log-m4 / roadmap issue #51. */
@@ -303,6 +312,7 @@ export const getDeck = createServerFn({ method: 'GET' })
       boxColor: deck.boxColor,
       sleeveColor: deck.sleeveColor,
       archetype: deck.archetype,
+      secondaryArchetype: deck.secondaryArchetype,
       cards,
       lastPlayedDate: lastPlayedRow?.lastPlayedDate ?? null,
     }

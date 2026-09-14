@@ -29,6 +29,9 @@ export const decks = sqliteTable('decks', {
   boxColor: text('box_color'),
   sleeveColor: text('sleeve_color'),
   archetype: text('archetype'),
+  // A deck can have up to 2 archetypes (e.g. "Aristocrats" + "Sacrifice") —
+  // roadmap issue #124.
+  secondaryArchetype: text('secondary_archetype'),
   // How many of the leading card lines are commanders when the pasted text
   // has no explicit "Commander" header — 1 normally, 2 for Partner/
   // Background decks. Set by the user (checkbox on import/edit) since the

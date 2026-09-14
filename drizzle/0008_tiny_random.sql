@@ -1,0 +1,1 @@
+ALTER TABLE `decks` ADD `secondary_archetype` text;

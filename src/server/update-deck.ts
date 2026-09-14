@@ -25,6 +25,7 @@ const updateDeckSchema = z.object({
   boxColor: optionalText,
   sleeveColor: optionalText,
   archetype: optionalText,
+  secondaryArchetype: optionalText,
 })
 
 export interface UpdateDeckResult {
@@ -71,6 +72,7 @@ export const updateDeck = createServerFn({ method: 'POST' })
           boxColor: data.boxColor,
           sleeveColor: data.sleeveColor,
           archetype: data.archetype,
+          secondaryArchetype: data.secondaryArchetype,
           updatedAt: new Date(),
         })
         .where(eq(decks.id, data.deckId))
