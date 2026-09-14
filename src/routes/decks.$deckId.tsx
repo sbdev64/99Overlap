@@ -59,6 +59,12 @@ export const Route = createFileRoute('/decks/$deckId')({
   loader: ({ params }) => getDeck({ data: { deckId: params.deckId } }),
 })
 
+/** Card counts must sum `quantity` (a "30 Plains" line is one row with
+ * quantity 30), not just count distinct rows — see roadmap issue #88. */
+function sumQuantity(cards: DeckCardEntry[]): number {
+  return cards.reduce((total, card) => total + card.quantity, 0)
+}
+
 function DeckDetailPage() {
   const deck = Route.useLoaderData()
   const router = useRouter()
@@ -367,7 +373,7 @@ function DeckDetailPage() {
       <section className="mt-6">
         <div className="flex items-center justify-between">
           <h2 className="font-medium text-sm uppercase tracking-wide">
-            Mainboard ({mainboard.length})
+            Mainboard ({sumQuantity(mainboard)})
           </h2>
           <div className="flex items-center gap-2">
             <Label htmlFor="group-by" className="text-muted-foreground text-xs">
@@ -393,7 +399,7 @@ function DeckDetailPage() {
         {mainboardGroups.map((group) => (
           <div key={group.label} className="mt-3">
             <h3 className="text-muted-foreground text-xs uppercase tracking-wide">
-              {group.label} ({group.cards.length})
+              {group.label} ({sumQuantity(group.cards)})
             </h3>
             <ul className="mt-1 flex flex-col gap-1">
               {group.cards.map((card) =>
