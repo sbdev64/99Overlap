@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { colorIdentityName } from '@/lib/colors'
 import { toDisplayDate } from '@/lib/date-format'
 import { DECK_TYPE_LABELS } from '@/lib/deck-type'
 import { type DeckSummary, listDecks } from '@/server/decks'
@@ -154,6 +155,8 @@ function DeckSection({
 }
 
 function DeckCard({ deck }: { deck: DeckSummary }) {
+  const infoLine = deckInfoLine(deck)
+
   return (
     <Link
       to="/decks/$deckId"
@@ -182,6 +185,9 @@ function DeckCard({ deck }: { deck: DeckSummary }) {
         <p className="truncate text-muted-foreground text-xs">
           {deck.commanderName ?? 'No commander recorded'}
         </p>
+        {infoLine && (
+          <p className="truncate text-muted-foreground text-xs">{infoLine}</p>
+        )}
         <p className="text-muted-foreground text-xs">
           {deck.lastPlayedDate
             ? `Last played ${toDisplayDate(deck.lastPlayedDate)}`
@@ -190,4 +196,17 @@ function DeckCard({ deck }: { deck: DeckSummary }) {
       </div>
     </Link>
   )
+}
+
+/** The decks list's compact, single-line info summary — the "keep it
+ * simple" counterpart to the deck detail page's richer `DeckInfoPanel`. See
+ * roadmap issue #124. */
+function deckInfoLine(deck: DeckSummary): string {
+  return [
+    deck.colorIdentity !== null && colorIdentityName(deck.colorIdentity),
+    deck.archetype,
+    deck.secondaryArchetype,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }

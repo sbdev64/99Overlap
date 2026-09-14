@@ -45,11 +45,11 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { GROUP_BY_OPTIONS, type GroupBy, groupCards } from '@/lib/card-grouping'
-import { colorIdentityLabel } from '@/lib/colors'
+import { COLOR_ORDER, colorIdentityName } from '@/lib/colors'
 import { toDisplayDate } from '@/lib/date-format'
 import { DECK_TYPE_LABELS, DECK_TYPES, type DeckType } from '@/lib/deck-type'
 import { cn } from '@/lib/utils'
-import { type DeckCardEntry, getDeck } from '@/server/decks'
+import { type DeckCardEntry, type DeckDetail, getDeck } from '@/server/decks'
 import { deleteDeck } from '@/server/delete-deck'
 import { markShared } from '@/server/mark-shared'
 import { unmarkShared } from '@/server/unmark-shared'
@@ -126,6 +126,9 @@ function DeckDetailPage() {
   const [boxColor, setBoxColor] = useState(deck.boxColor ?? '')
   const [sleeveColor, setSleeveColor] = useState(deck.sleeveColor ?? '')
   const [archetype, setArchetype] = useState(deck.archetype ?? '')
+  const [secondaryArchetype, setSecondaryArchetype] = useState(
+    deck.secondaryArchetype ?? '',
+  )
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -145,6 +148,7 @@ function DeckDetailPage() {
           boxColor,
           sleeveColor,
           archetype,
+          secondaryArchetype,
         },
       })
       setEditing(false)
@@ -192,22 +196,7 @@ function DeckDetailPage() {
               ? `Last played ${toDisplayDate(deck.lastPlayedDate)}`
               : 'Never played'}
           </p>
-          {(deck.colorIdentity !== null ||
-            deck.archetype ||
-            deck.boxColor ||
-            deck.sleeveColor) && (
-            <p className="text-muted-foreground text-sm">
-              {[
-                deck.colorIdentity !== null &&
-                  colorIdentityLabel(deck.colorIdentity),
-                deck.archetype,
-                deck.boxColor && `${deck.boxColor} box`,
-                deck.sleeveColor && `${deck.sleeveColor} sleeves`,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
-          )}
+          <DeckInfoPanel deck={deck} />
         </div>
         {!editing && (
           <div className="flex gap-2">
@@ -220,6 +209,7 @@ function DeckDetailPage() {
                 setBoxColor(deck.boxColor ?? '')
                 setSleeveColor(deck.sleeveColor ?? '')
                 setArchetype(deck.archetype ?? '')
+                setSecondaryArchetype(deck.secondaryArchetype ?? '')
                 setError(null)
                 setEditing(true)
               }}
@@ -304,6 +294,17 @@ function DeckDetailPage() {
                 value={archetype}
                 onChange={(e) => setArchetype(e.target.value)}
                 placeholder="Aristocrats"
+              />
+            </div>
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Label htmlFor="edit-secondary-archetype">
+                2nd archetype (optional)
+              </Label>
+              <Input
+                id="edit-secondary-archetype"
+                value={secondaryArchetype}
+                onChange={(e) => setSecondaryArchetype(e.target.value)}
+                placeholder="Sacrifice"
               />
             </div>
             <div className="flex flex-1 flex-col gap-1.5">
@@ -494,6 +495,96 @@ function DeckDetailPage() {
         </div>
       </section>
     </main>
+  )
+}
+
+// Approximate WUBRG pip colors — doesn't need to be pixel-perfect to the
+// official mana symbols, just recognizable at a glance. See roadmap issue
+// #124.
+const COLOR_PIP_CLASS: Record<string, string> = {
+  W: 'bg-amber-100 text-amber-900',
+  U: 'bg-blue-200 text-blue-900',
+  B: 'bg-zinc-700 text-zinc-100',
+  R: 'bg-red-300 text-red-900',
+  G: 'bg-green-300 text-green-900',
+}
+
+/** The deck detail page's "fancy" info panel: color identity's official
+ * name (e.g. "Bant") with a pip per color, both archetypes as badges, and
+ * box/sleeve color as small swatches. Deliberately richer than the compact
+ * line `DeckCard` shows on the decks list — see roadmap issue #124. */
+function DeckInfoPanel({ deck }: { deck: DeckDetail }) {
+  const hasInfo =
+    deck.colorIdentity !== null ||
+    deck.archetype ||
+    deck.secondaryArchetype ||
+    deck.boxColor ||
+    deck.sleeveColor
+  if (!hasInfo) return null
+
+  const colors = deck.colorIdentity ? deck.colorIdentity.split(',') : []
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+      {deck.colorIdentity !== null && (
+        <div className="flex items-center gap-1.5">
+          {colors.length > 0 && (
+            <div className="flex -space-x-1">
+              {COLOR_ORDER.filter((c) => colors.includes(c)).map((c) => (
+                <span
+                  key={c}
+                  className={cn(
+                    'flex size-5 items-center justify-center rounded-full border border-background font-bold text-[10px]',
+                    COLOR_PIP_CLASS[c],
+                  )}
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+          )}
+          <span className="font-medium text-sm">
+            {colorIdentityName(deck.colorIdentity)}
+          </span>
+        </div>
+      )}
+      {[deck.archetype, deck.secondaryArchetype]
+        .filter((a): a is string => Boolean(a))
+        .map((a) => (
+          <span
+            key={a}
+            className="rounded-full bg-secondary px-2 py-0.5 text-secondary-foreground text-xs"
+          >
+            {a}
+          </span>
+        ))}
+      {deck.boxColor && (
+        <ColorSwatch label={`${deck.boxColor} box`} color={deck.boxColor} />
+      )}
+      {deck.sleeveColor && (
+        <ColorSwatch
+          label={`${deck.sleeveColor} sleeves`}
+          color={deck.sleeveColor}
+        />
+      )}
+    </div>
+  )
+}
+
+/** A small color dot next to a label — `color` is rendered directly as a CSS
+ * `background-color` (box/sleeve colors are free text like "Black" or
+ * "Purple", valid CSS color keywords more often than not); an invalid value
+ * just falls back to no visible fill, which degrades harmlessly. */
+function ColorSwatch({ label, color }: { label: string; color: string }) {
+  return (
+    <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
+      <span
+        className="size-3 rounded-full border border-border"
+        style={{ backgroundColor: color }}
+        aria-hidden="true"
+      />
+      {label}
+    </span>
   )
 }
 

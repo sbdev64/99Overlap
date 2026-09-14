@@ -57,6 +57,13 @@
       "when": 1789373243872,
       "tag": "0007_yummy_network",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789390771220,
+      "tag": "0008_tiny_random",
+      "breakpoints": true
     }
   ]
 }

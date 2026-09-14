@@ -31,3 +31,56 @@ export function colorIdentityLabel(colorIdentity: string | null): string {
     .map((letter) => COLOR_NAMES[letter] ?? letter)
     .join('/')
 }
+
+// Every WUBRG-ordered color-identity string mapped to Magic's official/
+// community name for that combination — the 10 two-color guilds, the 10
+// three-color shards (allied) and wedges (enemy), the 5 four-color "Nephilim"
+// names (from the Guildpact cycle, named for the excluded color), and
+// five-color. Mono colors and colorless fall back to COLOR_NAMES/"Colorless"
+// below rather than needing an entry here. Used for deck-level display only
+// (roadmap issue #124) — `colorIdentityLabel` above (plain color-name join)
+// is left as-is for per-card grouping headers, a different, unrelated use.
+const COLOR_IDENTITY_NAMES: Record<string, string> = {
+  // Two-color guilds
+  'W,U': 'Azorius',
+  'W,B': 'Orzhov',
+  'W,R': 'Boros',
+  'W,G': 'Selesnya',
+  'U,B': 'Dimir',
+  'U,R': 'Izzet',
+  'U,G': 'Simic',
+  'B,R': 'Rakdos',
+  'B,G': 'Golgari',
+  'R,G': 'Gruul',
+  // Three-color shards (allied) and wedges (enemy)
+  'W,U,B': 'Esper',
+  'W,U,R': 'Jeskai',
+  'W,U,G': 'Bant',
+  'W,B,R': 'Mardu',
+  'W,B,G': 'Abzan',
+  'W,R,G': 'Naya',
+  'U,B,R': 'Grixis',
+  'U,B,G': 'Sultai',
+  'U,R,G': 'Temur',
+  'B,R,G': 'Jund',
+  // Four-color "Nephilim", named for the excluded color
+  'W,U,B,R': 'Yore-Tiller',
+  'W,U,B,G': 'Witch-Maw',
+  'W,U,R,G': 'Ink-Treader',
+  'W,B,R,G': 'Dune-Brood',
+  'U,B,R,G': 'Glint-Eye',
+  // Five-color
+  'W,U,B,R,G': 'Five-Color',
+}
+
+/** Deck-level color identity display: the official guild/shard/wedge/
+ * four-color/five-color name where one exists (e.g. "W,U,G" -> "Bant"),
+ * falling back to the plain color name for mono/colorless. See roadmap
+ * issue #124. */
+export function colorIdentityName(colorIdentity: string | null): string {
+  if (colorIdentity === null) return 'Unknown'
+  if (colorIdentity === '') return 'Colorless'
+  return (
+    COLOR_IDENTITY_NAMES[colorIdentity] ?? colorIdentityLabel(colorIdentity)
+  )
+}
