@@ -49,6 +49,11 @@ import { COLOR_ORDER, colorIdentityName } from '@/lib/colors'
 import { toDisplayDate } from '@/lib/date-format'
 import { DECK_TYPE_LABELS, DECK_TYPES, type DeckType } from '@/lib/deck-type'
 import { exportDecklist } from '@/lib/decklist-export'
+import {
+  POWER_BRACKET_LABELS,
+  POWER_BRACKETS,
+  powerBracketLabel,
+} from '@/lib/power-bracket'
 import { cn } from '@/lib/utils'
 import { type DeckCardEntry, type DeckDetail, getDeck } from '@/server/decks'
 import { deleteDeck } from '@/server/delete-deck'
@@ -130,6 +135,9 @@ function DeckDetailPage() {
   const [secondaryArchetype, setSecondaryArchetype] = useState(
     deck.secondaryArchetype ?? '',
   )
+  const [powerBracket, setPowerBracket] = useState(
+    deck.powerBracket !== null ? String(deck.powerBracket) : '',
+  )
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -150,6 +158,7 @@ function DeckDetailPage() {
           sleeveColor,
           archetype,
           secondaryArchetype,
+          powerBracket,
         },
       })
       setEditing(false)
@@ -212,6 +221,9 @@ function DeckDetailPage() {
                 setSleeveColor(deck.sleeveColor ?? '')
                 setArchetype(deck.archetype ?? '')
                 setSecondaryArchetype(deck.secondaryArchetype ?? '')
+                setPowerBracket(
+                  deck.powerBracket !== null ? String(deck.powerBracket) : '',
+                )
                 setError(null)
                 setEditing(true)
               }}
@@ -308,6 +320,25 @@ function DeckDetailPage() {
                 onChange={(e) => setSecondaryArchetype(e.target.value)}
                 placeholder="Sacrifice"
               />
+            </div>
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Label htmlFor="edit-power-bracket">Power bracket</Label>
+              <Select
+                value={powerBracket || 'none'}
+                onValueChange={(v) => setPowerBracket(v === 'none' ? '' : v)}
+              >
+                <SelectTrigger id="edit-power-bracket">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not set</SelectItem>
+                  {POWER_BRACKETS.map((bracket) => (
+                    <SelectItem key={bracket} value={String(bracket)}>
+                      {bracket} · {POWER_BRACKET_LABELS[bracket]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex flex-1 flex-col gap-1.5">
               <Label htmlFor="edit-box-color">Box color</Label>
@@ -520,6 +551,7 @@ function DeckInfoPanel({ deck }: { deck: DeckDetail }) {
     deck.colorIdentity !== null ||
     deck.archetype ||
     deck.secondaryArchetype ||
+    deck.powerBracket !== null ||
     deck.boxColor ||
     deck.sleeveColor
   if (!hasInfo) return null
@@ -560,6 +592,11 @@ function DeckInfoPanel({ deck }: { deck: DeckDetail }) {
             {a}
           </span>
         ))}
+      {deck.powerBracket !== null && (
+        <span className="rounded-full border border-border px-2 py-0.5 text-xs">
+          {powerBracketLabel(deck.powerBracket)}
+        </span>
+      )}
       {deck.boxColor && (
         <ColorSwatch label={`${deck.boxColor} box`} color={deck.boxColor} />
       )}

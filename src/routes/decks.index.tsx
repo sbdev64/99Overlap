@@ -206,6 +206,9 @@ function deckInfoLine(deck: DeckSummary): string {
     deck.colorIdentity !== null && colorIdentityName(deck.colorIdentity),
     deck.archetype,
     deck.secondaryArchetype,
+    // Short form here (just the number) — the deck page's fancy panel shows
+    // the full "Bracket N · Name" via powerBracketLabel().
+    deck.powerBracket !== null && `Bracket ${deck.powerBracket}`,
   ]
     .filter(Boolean)
     .join(' · ')
