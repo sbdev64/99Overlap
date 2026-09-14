@@ -65,6 +65,15 @@ function sumQuantity(cards: DeckCardEntry[]): number {
   return cards.reduce((total, card) => total + card.quantity, 0)
 }
 
+/** Text: compact list, image on hover. Visual: every card's image shown
+ * directly, spoiler-gallery style. See roadmap issue #91. */
+type ViewMode = 'text' | 'visual'
+
+const VIEW_MODE_OPTIONS: { value: ViewMode; label: string }[] = [
+  { value: 'text', label: 'Text' },
+  { value: 'visual', label: 'Visual spoiler' },
+]
+
 function DeckDetailPage() {
   const deck = Route.useLoaderData()
   const router = useRouter()
@@ -75,6 +84,7 @@ function DeckDetailPage() {
   const hasOverlap =
     !isPlanning && deck.cards.some((card) => card.isOverlapping)
   const [groupBy, setGroupBy] = useState<GroupBy>('type')
+  const [viewMode, setViewMode] = useState<ViewMode>('text')
   const mainboardGroups = groupCards(mainboard, groupBy)
   // Shared cards this deck needs that are currently sitting in another deck
   // — or, if that deck was deleted, whose location is now unknown (`null`).
@@ -358,12 +368,22 @@ function DeckDetailPage() {
           <h2 className="font-medium text-sm uppercase tracking-wide">
             Commander
           </h2>
-          <ul className="mt-2 flex flex-col gap-1">
+          <ul
+            className={
+              viewMode === 'visual'
+                ? 'mt-2 flex flex-wrap gap-3'
+                : 'mt-2 flex flex-col gap-1'
+            }
+          >
             {commanders.map((card) =>
               isPlanning ? (
-                <PlanningCardLine key={card.cardId} card={card} />
+                <PlanningCardLine
+                  key={card.cardId}
+                  card={card}
+                  viewMode={viewMode}
+                />
               ) : (
-                <CardLine key={card.cardId} card={card} />
+                <CardLine key={card.cardId} card={card} viewMode={viewMode} />
               ),
             )}
           </ul>
@@ -371,29 +391,48 @@ function DeckDetailPage() {
       )}
 
       <section className="mt-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-medium text-sm uppercase tracking-wide">
             Mainboard ({sumQuantity(mainboard)})
           </h2>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="group-by" className="text-muted-foreground text-xs">
-              Group by
-            </Label>
-            <Select
-              value={groupBy}
-              onValueChange={(value) => setGroupBy(value as GroupBy)}
-            >
-              <SelectTrigger id="group-by" className="h-8 w-40 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {GROUP_BY_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1 rounded-md border p-0.5">
+              {VIEW_MODE_OPTIONS.map((option) => (
+                <Button
+                  key={option.value}
+                  type="button"
+                  size="sm"
+                  variant={viewMode === option.value ? 'default' : 'ghost'}
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setViewMode(option.value)}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <Label
+                htmlFor="group-by"
+                className="text-muted-foreground text-xs"
+              >
+                Group by
+              </Label>
+              <Select
+                value={groupBy}
+                onValueChange={(value) => setGroupBy(value as GroupBy)}
+              >
+                <SelectTrigger id="group-by" className="h-8 w-40 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GROUP_BY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         {mainboardGroups.map((group) => (
@@ -401,12 +440,22 @@ function DeckDetailPage() {
             <h3 className="text-muted-foreground text-xs uppercase tracking-wide">
               {group.label} ({sumQuantity(group.cards)})
             </h3>
-            <ul className="mt-1 flex flex-col gap-1">
+            <ul
+              className={
+                viewMode === 'visual'
+                  ? 'mt-1 flex flex-wrap gap-3'
+                  : 'mt-1 flex flex-col gap-1'
+              }
+            >
               {group.cards.map((card) =>
                 isPlanning ? (
-                  <PlanningCardLine key={card.cardId} card={card} />
+                  <PlanningCardLine
+                    key={card.cardId}
+                    card={card}
+                    viewMode={viewMode}
+                  />
                 ) : (
-                  <CardLine key={card.cardId} card={card} />
+                  <CardLine key={card.cardId} card={card} viewMode={viewMode} />
                 ),
               )}
             </ul>
@@ -480,8 +529,37 @@ function MissingSharedCardRow({
  * link to the owning deck(s)) or needing to be bought, instead of the
  * shared-card overlap highlighting `CardLine` shows for owned decks. See
  * docs/PRODUCT.md#10. */
-function PlanningCardLine({ card }: { card: DeckCardEntry }) {
+function PlanningCardLine({
+  card,
+  viewMode,
+}: {
+  card: DeckCardEntry
+  viewMode: ViewMode
+}) {
   const owned = card.ownedInDecks.length > 0
+
+  if (viewMode === 'visual') {
+    return (
+      <li
+        className={cn('rounded p-1', owned && 'bg-green-100 dark:bg-green-950')}
+      >
+        <CardTile
+          card={card}
+          badge={
+            owned ? (
+              <span className="text-[10px] text-green-700 dark:text-green-400">
+                ✓ owned
+              </span>
+            ) : (
+              <span className="font-medium text-[10px] text-destructive">
+                Need to buy
+              </span>
+            )
+          }
+        />
+      </li>
+    )
+  }
 
   return (
     <li
@@ -518,44 +596,63 @@ function PlanningCardLine({ card }: { card: DeckCardEntry }) {
   )
 }
 
-function CardLine({ card }: { card: DeckCardEntry }) {
-  const label = (
-    <CardImagePreview card={card}>
-      {card.quantity} {card.name}
-      {card.isShared && (
-        <span
-          className={cn(
-            'ml-2 text-xs',
-            card.currentDeckId === null && 'font-medium text-destructive',
-          )}
-        >
-          ★ shared —{' '}
-          {card.currentDeckName
-            ? `in ${card.currentDeckName}`
-            : 'location unknown'}
-        </span>
+function CardLine({
+  card,
+  viewMode,
+}: {
+  card: DeckCardEntry
+  viewMode: ViewMode
+}) {
+  const sharedBadge = card.isShared && (
+    <span
+      className={cn(
+        'text-xs',
+        viewMode === 'visual' ? 'text-[10px]' : 'ml-2',
+        card.currentDeckId === null && 'font-medium text-destructive',
       )}
-    </CardImagePreview>
+    >
+      ★{' '}
+      {card.currentDeckName ? `in ${card.currentDeckName}` : 'location unknown'}
+    </span>
   )
+
+  const label =
+    viewMode === 'visual' ? (
+      <CardTile card={card} badge={sharedBadge} />
+    ) : (
+      <CardImagePreview card={card}>
+        {card.quantity} {card.name}
+        {sharedBadge}
+      </CardImagePreview>
+    )
 
   // Once a card is shared, keep it clickable (to unmark or update its
   // location) even if it no longer overlaps with another deck — it must
   // stay manageable from every view it's shown in, not just while
   // overlapping. See docs/PRODUCT.md#5-marking-a-shared-card.
   if (!card.isOverlapping && !card.isShared) {
-    return <li className="rounded px-1">{label}</li>
+    return (
+      <li className={viewMode === 'visual' ? undefined : 'rounded px-1'}>
+        {label}
+      </li>
+    )
   }
 
   return (
     <li>
-      <SharedCardPicker card={card} label={label} />
+      <SharedCardPicker
+        card={card}
+        label={label}
+        tileMode={viewMode === 'visual'}
+      />
     </li>
   )
 }
 
 /** Moxfield-style hover preview: shows the card's Scryfall image next to its
  * name. Falls back to plain text when enrichment hasn't found an image yet
- * (or the card was never found on Scryfall) — see docs/PRODUCT.md#7. */
+ * (or the card was never found on Scryfall) — see docs/PRODUCT.md#7. Text
+ * mode only — Visual spoiler mode uses `CardTile` instead (#91). */
 function CardImagePreview({
   card,
   children,
@@ -570,7 +667,9 @@ function CardImagePreview({
   return (
     <HoverCard openDelay={150} closeDelay={0}>
       <HoverCardTrigger asChild>
-        <span className="cursor-default">{children}</span>
+        <span className="cursor-pointer underline decoration-dotted underline-offset-2">
+          {children}
+        </span>
       </HoverCardTrigger>
       <HoverCardContent className="w-56 p-1" side="right" align="start">
         <img
@@ -584,12 +683,47 @@ function CardImagePreview({
   )
 }
 
+/** Visual spoiler mode's card tile: always shows the card's image (or a
+ * name-only placeholder when unenriched/not found), no hover needed. See
+ * roadmap issue #91. */
+function CardTile({
+  card,
+  badge,
+}: {
+  card: DeckCardEntry
+  badge?: React.ReactNode
+}) {
+  return (
+    <div className="flex w-24 flex-col items-center gap-1 text-center">
+      {card.imageUrl ? (
+        <img
+          src={card.imageUrl}
+          alt={card.name}
+          loading="lazy"
+          className="aspect-5/7 w-full rounded-md object-cover"
+        />
+      ) : (
+        <div className="flex aspect-5/7 w-full items-center justify-center rounded-md border border-dashed p-1 text-[10px] text-muted-foreground">
+          {card.name}
+        </div>
+      )}
+      <span className="line-clamp-2 text-[11px] leading-tight">
+        {card.quantity > 1 && `${card.quantity}× `}
+        {card.name}
+      </span>
+      {badge}
+    </div>
+  )
+}
+
 function SharedCardPicker({
   card,
   label,
+  tileMode = false,
 }: {
   card: DeckCardEntry
   label: React.ReactNode
+  tileMode?: boolean
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -649,7 +783,7 @@ function SharedCardPicker({
         <button
           type="button"
           className={cn(
-            'w-full rounded px-1 text-left',
+            tileMode ? 'rounded p-1' : 'w-full rounded px-1 text-left',
             'bg-amber-200 dark:bg-amber-900',
           )}
         >
