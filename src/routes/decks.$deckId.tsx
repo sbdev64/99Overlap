@@ -267,10 +267,22 @@ function DeckDetailPage() {
 
       {missingShared.length > 0 && (
         <section className="mt-4 rounded-md border-2 border-amber-500 bg-amber-50 p-4 dark:bg-amber-950">
-          <h2 className="font-semibold">⚠ Missing shared cards</h2>
-          <p className="text-muted-foreground text-sm">
-            Grab these from where they currently are before you play this deck.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 className="font-semibold">⚠ Missing shared cards</h2>
+              <p className="text-muted-foreground text-sm">
+                Grab these from where they currently are before you play this
+                deck.
+              </p>
+            </div>
+            <Link
+              to="/decks/$deckId/checklist"
+              params={{ deckId: String(deck.id) }}
+              className="whitespace-nowrap text-sm underline"
+            >
+              Open as checklist →
+            </Link>
+          </div>
           <ul className="mt-2 flex flex-col gap-2">
             {missingShared.map((card) => (
               <MissingSharedCardRow
