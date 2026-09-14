@@ -81,6 +81,22 @@ const VIEW_MODE_OPTIONS: { value: ViewMode; label: string }[] = [
   { value: 'visual', label: 'Visual spoiler' },
 ]
 
+// How many card tiles per row in Visual spoiler mode — user-selectable. See
+// roadmap issue #133. Tailwind's JIT scanner needs literal class strings,
+// so this maps each option to one rather than building the class from the
+// number at runtime (same approach as Statistics' charts-per-row, #108).
+type CardsPerRow = 4 | 5 | 6 | 7 | 8 | 9 | 10
+const CARDS_PER_ROW_OPTIONS: CardsPerRow[] = [4, 5, 6, 7, 8, 9, 10]
+const CARDS_PER_ROW_GRID_CLASS: Record<CardsPerRow, string> = {
+  4: 'grid-cols-4',
+  5: 'grid-cols-5',
+  6: 'grid-cols-6',
+  7: 'grid-cols-7',
+  8: 'grid-cols-8',
+  9: 'grid-cols-9',
+  10: 'grid-cols-10',
+}
+
 // Every card <li> in text mode gets a little breathing room below it.
 const TEXT_LI_CLASS = 'mb-1'
 
@@ -109,6 +125,7 @@ function DeckDetailPage() {
     !isPlanning && deck.cards.some((card) => card.isOverlapping)
   const [groupBy, setGroupBy] = useState<GroupBy>('type')
   const [viewMode, setViewMode] = useState<ViewMode>('text')
+  const [cardsPerRow, setCardsPerRow] = useState<CardsPerRow>(6)
   const mainboardGroups = groupCards(mainboard, groupBy)
   // Shared cards this deck needs that are currently sitting in another deck
   // — or, if that deck was deleted, whose location is now unknown (`null`).
@@ -435,7 +452,7 @@ function DeckDetailPage() {
           <ul
             className={
               viewMode === 'visual'
-                ? 'mt-2 flex flex-wrap gap-3'
+                ? `mt-2 grid gap-3 ${CARDS_PER_ROW_GRID_CLASS[cardsPerRow]}`
                 : 'mt-2 flex flex-col gap-1'
             }
           >
@@ -474,6 +491,36 @@ function DeckDetailPage() {
                 </Button>
               ))}
             </div>
+            {viewMode === 'visual' && (
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor="cards-per-row"
+                  className="text-muted-foreground text-xs"
+                >
+                  Cards per row
+                </Label>
+                <Select
+                  value={String(cardsPerRow)}
+                  onValueChange={(value) =>
+                    setCardsPerRow(Number(value) as CardsPerRow)
+                  }
+                >
+                  <SelectTrigger
+                    id="cards-per-row"
+                    className="h-8 w-16 text-xs"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CARDS_PER_ROW_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={String(option)}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Label
                 htmlFor="group-by"
@@ -515,7 +562,7 @@ function DeckDetailPage() {
               <ul
                 className={
                   viewMode === 'visual'
-                    ? 'mt-1 flex flex-wrap gap-3'
+                    ? `mt-1 grid gap-3 ${CARDS_PER_ROW_GRID_CLASS[cardsPerRow]}`
                     : 'mt-2 flex flex-col'
                 }
               >
@@ -952,7 +999,7 @@ function CardTile({
     : card.imageUrl
 
   return (
-    <div className="flex w-24 flex-col items-center gap-1 text-center">
+    <div className="flex w-full flex-col items-center gap-1 text-center">
       <div className="relative w-full">
         {activeImage ? (
           <img
@@ -1046,7 +1093,7 @@ function SharedCardPicker({
         <button
           type="button"
           className={cn(
-            tileMode ? 'rounded p-1' : 'w-full rounded px-1 text-left',
+            tileMode ? 'w-full rounded p-1' : 'w-full rounded px-1 text-left',
             'bg-amber-200 dark:bg-amber-900',
           )}
         >
