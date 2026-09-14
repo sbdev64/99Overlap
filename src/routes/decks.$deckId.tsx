@@ -80,14 +80,17 @@ const VIEW_MODE_OPTIONS: { value: ViewMode; label: string }[] = [
 // items the way flexbox does). See roadmap issue #93.
 const TEXT_LI_CLASS = 'mb-1 break-inside-avoid-column'
 
-/** Text mode's `columns` CSS shorthand for a group/list: short lists stay a
- * single column; longer ones get more, capped at 4 — and within that cap
- * the browser narrows the actual column count to fit the viewport, so this
- * naturally reflows at phone width too. See roadmap issue #93. */
-function textColumnsStyle(cardCount: number): React.CSSProperties {
-  const count =
-    cardCount <= 8 ? 1 : cardCount <= 16 ? 2 : cardCount <= 24 ? 3 : 4
-  return { columns: `${count} 14rem`, columnGap: '1.5rem' }
+// Text mode's mainboard layout: the whole section (every group's heading +
+// card list) flows through one CSS multi-column container, Moxfield-style —
+// short groups pack together in the same column instead of each getting its
+// own, and the whole decklist is visible with less scrolling. `columns: 4
+// 14rem` caps it at 4 columns of at least 14rem, and within that cap the
+// browser narrows the actual column count to fit the viewport, so this also
+// reflows down to a single column at phone width. See roadmap issue #99 (a
+// correction of #93 — a per-group column count wasn't what was wanted).
+const TEXT_MAINBOARD_STYLE: React.CSSProperties = {
+  columns: '4 14rem',
+  columnGap: '1.5rem',
 }
 
 function DeckDetailPage() {
@@ -386,12 +389,9 @@ function DeckDetailPage() {
           </h2>
           <ul
             className={
-              viewMode === 'visual' ? 'mt-2 flex flex-wrap gap-3' : 'mt-2'
-            }
-            style={
-              viewMode === 'text'
-                ? textColumnsStyle(commanders.length)
-                : undefined
+              viewMode === 'visual'
+                ? 'mt-2 flex flex-wrap gap-3'
+                : 'mt-2 flex flex-col gap-1'
             }
           >
             {commanders.map((card) =>
@@ -454,35 +454,36 @@ function DeckDetailPage() {
             </div>
           </div>
         </div>
-        {mainboardGroups.map((group) => (
-          <div key={group.label} className="mt-3">
-            <h3 className="text-muted-foreground text-xs uppercase tracking-wide">
-              {group.label} ({sumQuantity(group.cards)})
-            </h3>
-            <ul
-              className={
-                viewMode === 'visual' ? 'mt-1 flex flex-wrap gap-3' : 'mt-1'
-              }
-              style={
-                viewMode === 'text'
-                  ? textColumnsStyle(group.cards.length)
-                  : undefined
-              }
-            >
-              {group.cards.map((card) =>
-                isPlanning ? (
-                  <PlanningCardLine
-                    key={card.cardId}
-                    card={card}
-                    viewMode={viewMode}
-                  />
-                ) : (
-                  <CardLine key={card.cardId} card={card} viewMode={viewMode} />
-                ),
-              )}
-            </ul>
-          </div>
-        ))}
+        <div style={viewMode === 'text' ? TEXT_MAINBOARD_STYLE : undefined}>
+          {mainboardGroups.map((group) => (
+            <div key={group.label} className="mt-3">
+              <h3 className="break-after-avoid-column text-muted-foreground text-xs uppercase tracking-wide">
+                {group.label} ({sumQuantity(group.cards)})
+              </h3>
+              <ul
+                className={
+                  viewMode === 'visual' ? 'mt-1 flex flex-wrap gap-3' : 'mt-1'
+                }
+              >
+                {group.cards.map((card) =>
+                  isPlanning ? (
+                    <PlanningCardLine
+                      key={card.cardId}
+                      card={card}
+                      viewMode={viewMode}
+                    />
+                  ) : (
+                    <CardLine
+                      key={card.cardId}
+                      card={card}
+                      viewMode={viewMode}
+                    />
+                  ),
+                )}
+              </ul>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   )
