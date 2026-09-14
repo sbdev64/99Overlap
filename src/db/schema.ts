@@ -109,6 +109,22 @@ export const deckCards = sqliteTable(
 )
 
 /**
+ * A named playgroup. Find-or-create by exact name when a game is logged
+ * (see `findOrCreatePod` in src/server/pods.ts) — the user never manages
+ * these directly, they're created implicitly by typing a new pod name into
+ * the (still free-text, still typeable) pod field. See roadmap issue #120,
+ * which replaced the original "pod is just a string" decision in
+ * docs/PRODUCT.md's decision log.
+ */
+export const pods = sqliteTable('pods', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull().unique(),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+})
+
+/**
  * One row per game logged. Replaces the user's manual Google Sheet game
  * log. See docs/PRODUCT.md#9-game-history-log-m4.
  */
@@ -126,8 +142,17 @@ export const games = sqliteTable('games', {
   // Denormalized snapshot of Deck.name at log time, so a deleted or
   // renamed deck doesn't blank out past history rows.
   deckName: text('deck_name').notNull(),
-  // Which regular playgroup — free text with autocomplete in the UI, not a
-  // managed entity. See the decision log in docs/PRODUCT.md.
+  // Nullable only for the same reason deckId is — set to null if the pod is
+  // ever deleted (no delete UI exists yet). `pod` below is the same
+  // denormalized-snapshot pattern as deckName, kept in sync with the pod's
+  // name at write time so existing aggregation code (which already groups
+  // by deckName text, not deckId) didn't need to change. See roadmap issue
+  // #120.
+  podId: integer('pod_id').references(() => pods.id, { onDelete: 'set null' }),
+  // Which regular playgroup — free text with autocomplete in the UI. Was
+  // the sole source of truth (see the decision log in docs/PRODUCT.md);
+  // now a denormalized snapshot of `pods.name` at log time, resolved
+  // through `findOrCreatePod`.
   pod: text('pod').notNull(),
   won: integer('won', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' })

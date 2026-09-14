@@ -71,6 +71,20 @@
       "when": 1789393278196,
       "tag": "0009_safe_bloodscream",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1789394627884,
+      "tag": "0010_bizarre_timeslip",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1789394764616,
+      "tag": "0011_backfill_pod_ids",
+      "breakpoints": true
     }
   ]
 }

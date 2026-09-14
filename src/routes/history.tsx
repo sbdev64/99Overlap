@@ -39,13 +39,18 @@ import { createGame } from '@/server/create-game'
 import { type DeckSummary, listDecks } from '@/server/decks'
 import { deleteGame } from '@/server/delete-game'
 import { type GameEntry, listGames } from '@/server/games'
+import { listPods } from '@/server/pods'
 import { updateGame } from '@/server/update-game'
 
 export const Route = createFileRoute('/history')({
   component: HistoryPage,
   loader: async () => {
-    const [games, decks] = await Promise.all([listGames(), listDecks()])
-    return { games, decks }
+    const [games, decks, pods] = await Promise.all([
+      listGames(),
+      listDecks(),
+      listPods(),
+    ])
+    return { games, decks, pods }
   },
 })
 
@@ -59,12 +64,8 @@ const tableFeaturesConfig = tableFeatures({
 })
 
 function HistoryPage() {
-  const { games, decks } = Route.useLoaderData()
+  const { games, decks, pods: knownPods } = Route.useLoaderData()
   const router = useRouter()
-  const knownPods = useMemo(
-    () => Array.from(new Set(games.map((game) => game.pod))).sort(),
-    [games],
-  )
   const addGameTriggerRef = useRef<HTMLButtonElement>(null)
   useHotkey('n', () => addGameTriggerRef.current?.click())
 
