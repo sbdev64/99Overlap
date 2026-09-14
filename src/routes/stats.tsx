@@ -33,12 +33,11 @@ const CHART_HEIGHT = 260
 // JIT scanner needs literal class strings, so this maps each option to one
 // rather than building the class from the number at runtime. See roadmap
 // issue #108.
-type ChartsPerRow = 2 | 4 | 8
-const CHARTS_PER_ROW_OPTIONS: ChartsPerRow[] = [2, 4, 8]
+type ChartsPerRow = 2 | 4
+const CHARTS_PER_ROW_OPTIONS: ChartsPerRow[] = [2, 4]
 const CHARTS_GRID_CLASS: Record<ChartsPerRow, string> = {
   2: 'grid-cols-1 sm:grid-cols-2',
   4: 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4',
-  8: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8',
 }
 
 function StatsPage() {
