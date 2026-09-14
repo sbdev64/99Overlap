@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { decks, games } from '@/db/schema'
+import { findOrCreatePod } from './pods'
 
 const updateGameSchema = z.object({
   gameId: z.coerce.number().int().positive(),
@@ -29,6 +30,8 @@ export const updateGame = createServerFn({ method: 'POST' })
       throw new Error('Deck not found')
     }
 
+    const pod = await findOrCreatePod(db, data.pod)
+
     await db
       .update(games)
       .set({
@@ -37,7 +40,8 @@ export const updateGame = createServerFn({ method: 'POST' })
         // Re-snapshotted in case the deck was renamed since this game was
         // first logged. See docs/PRODUCT.md#9-game-history-log-m4.
         deckName: deck.name,
-        pod: data.pod,
+        podId: pod.id,
+        pod: pod.name,
         won: data.won,
         updatedAt: new Date(),
       })

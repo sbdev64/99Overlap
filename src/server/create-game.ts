@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { decks, games } from '@/db/schema'
+import { findOrCreatePod } from './pods'
 
 const createGameSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
@@ -32,6 +33,8 @@ export const createGame = createServerFn({ method: 'POST' })
       throw new Error('Deck not found')
     }
 
+    const pod = await findOrCreatePod(db, data.pod)
+
     const [game] = await db
       .insert(games)
       .values({
@@ -40,7 +43,8 @@ export const createGame = createServerFn({ method: 'POST' })
         // Snapshotted at log time so a later deck rename/delete doesn't
         // blank out this row. See docs/PRODUCT.md#9-game-history-log-m4.
         deckName: deck.name,
-        pod: data.pod,
+        podId: pod.id,
+        pod: pod.name,
         won: data.won,
       })
       .returning({ id: games.id })
