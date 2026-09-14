@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { eq, isNull } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import { cards as cardsTable, deckCards, decks } from '@/db/schema'
 import { enrichCards } from './scryfall-enrich'
@@ -78,4 +78,35 @@ export const retryEnrichment = createServerFn({ method: 'POST' })
 
     await enrichCards(db, targets)
     return { retried: targets.length }
+  })
+
+const deleteUnenrichedCardSchema = z.object({
+  cardId: z.coerce.number().int().positive(),
+})
+
+/**
+ * Deletes a Card that's never matched on Scryfall — for when it's just
+ * garbage from a bad parse and retrying will never work, since it doesn't
+ * correspond to a real card. Removes it from every deck that references it
+ * too (it's junk data, not a real card being intentionally cut from a
+ * deck). Restricted to still-unenriched cards as a safety check against
+ * deleting a real, matched card by mistake. See roadmap issue #134.
+ */
+export const deleteUnenrichedCard = createServerFn({ method: 'POST' })
+  .validator((input: unknown) => deleteUnenrichedCardSchema.parse(input))
+  .handler(async ({ data }): Promise<{ cardId: number }> => {
+    // Dynamic import so `bun:sqlite` never ends up in the client bundle —
+    // see the comment in src/server/import-deck.ts.
+    const { db } = await import('@/db/client')
+
+    await db.transaction(async (tx) => {
+      await tx.delete(deckCards).where(eq(deckCards.cardId, data.cardId))
+      await tx
+        .delete(cardsTable)
+        .where(
+          and(eq(cardsTable.id, data.cardId), isNull(cardsTable.scryfallId)),
+        )
+    })
+
+    return { cardId: data.cardId }
   })
