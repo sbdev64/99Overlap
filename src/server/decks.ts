@@ -26,6 +26,7 @@ export interface DeckSummary {
   colorIdentity: string | null
   archetype: string | null
   secondaryArchetype: string | null
+  powerBracket: number | null
 }
 
 export const listDecks = createServerFn({ method: 'GET' }).handler(
@@ -44,6 +45,7 @@ export const listDecks = createServerFn({ method: 'GET' }).handler(
         colorIdentity: decks.colorIdentity,
         archetype: decks.archetype,
         secondaryArchetype: decks.secondaryArchetype,
+        powerBracket: decks.powerBracket,
       })
       .from(decks)
       // createdAt has only second-level precision, so two decks imported in
@@ -143,6 +145,7 @@ export interface DeckDetail {
   sleeveColor: string | null
   archetype: string | null
   secondaryArchetype: string | null
+  powerBracket: number | null
   cards: DeckCardEntry[]
   /** MAX(date) over this deck's logged games, or null if never played. See
    * docs/PRODUCT.md#9-game-history-log-m4 / roadmap issue #51. */
@@ -313,6 +316,7 @@ export const getDeck = createServerFn({ method: 'GET' })
       sleeveColor: deck.sleeveColor,
       archetype: deck.archetype,
       secondaryArchetype: deck.secondaryArchetype,
+      powerBracket: deck.powerBracket,
       cards,
       lastPlayedDate: lastPlayedRow?.lastPlayedDate ?? null,
     }

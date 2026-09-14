@@ -32,6 +32,9 @@ export const decks = sqliteTable('decks', {
   // A deck can have up to 2 archetypes (e.g. "Aristocrats" + "Sacrifice") —
   // roadmap issue #124.
   secondaryArchetype: text('secondary_archetype'),
+  // WotC's official Commander Bracket (1-5), optional. See
+  // src/lib/power-bracket.ts and roadmap issue #119.
+  powerBracket: integer('power_bracket'),
   // How many of the leading card lines are commanders when the pasted text
   // has no explicit "Commander" header — 1 normally, 2 for Partner/
   // Background decks. Set by the user (checkbox on import/edit) since the

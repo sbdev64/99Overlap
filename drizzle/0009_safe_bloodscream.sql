@@ -1,0 +1,1 @@
+ALTER TABLE `decks` ADD `power_bracket` integer;

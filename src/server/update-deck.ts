@@ -15,6 +15,23 @@ const optionalText = z
   .trim()
   .transform((value) => value || null)
 
+// Same idea as optionalText, but for the power bracket Select (1-5, or ""
+// for unset). See src/lib/power-bracket.ts and roadmap issue #119.
+const optionalPowerBracket = z
+  .string()
+  .trim()
+  .transform((value) => (value ? Number(value) : null))
+  .pipe(
+    z.union([
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(5),
+      z.null(),
+    ]),
+  )
+
 const updateDeckSchema = z.object({
   deckId: z.coerce.number().int().positive(),
   sourceText: z.string().trim().min(1, 'Paste a decklist first'),
@@ -26,6 +43,7 @@ const updateDeckSchema = z.object({
   sleeveColor: optionalText,
   archetype: optionalText,
   secondaryArchetype: optionalText,
+  powerBracket: optionalPowerBracket,
 })
 
 export interface UpdateDeckResult {
@@ -73,6 +91,7 @@ export const updateDeck = createServerFn({ method: 'POST' })
           sleeveColor: data.sleeveColor,
           archetype: data.archetype,
           secondaryArchetype: data.secondaryArchetype,
+          powerBracket: data.powerBracket,
           updatedAt: new Date(),
         })
         .where(eq(decks.id, data.deckId))
