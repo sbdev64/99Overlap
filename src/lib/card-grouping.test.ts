@@ -46,13 +46,25 @@ describe('groupCards - by type', () => {
 
     const groups = groupCards(cards, 'type')
     const labels = groups.map((g) => g.label)
-    expect(labels).toEqual(['Creature', 'Planeswalker', 'Artifact', 'Land'])
+    expect(labels).toEqual(['Planeswalker', 'Creature', 'Artifact', 'Land'])
 
     const creatureGroup = groups.find((g) => g.label === 'Creature')
     expect(creatureGroup?.cards.map((c) => c.name)).toEqual([
       'Sheoldred, the Apocalypse',
       'Wurmcoil Engine',
     ])
+  })
+
+  test('a dual-typed "Planeswalker Creature" classifies as Planeswalker', () => {
+    const cards = [
+      makeCard({
+        name: 'Some Planeswalker Creature',
+        typeLine: 'Legendary Planeswalker Creature — Example',
+      }),
+    ]
+
+    const groups = groupCards(cards, 'type')
+    expect(groups.map((g) => g.label)).toEqual(['Planeswalker'])
   })
 
   test('falls back to "Other" for an unenriched or unrecognized type line', () => {
