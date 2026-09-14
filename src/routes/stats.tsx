@@ -5,7 +5,8 @@ import { scaleLinear } from '@tanstack/charts/scales/linear'
 import { scalePoint } from '@tanstack/charts/scales/point'
 import { tooltip } from '@tanstack/charts/tooltip'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { toDisplayDate } from '@/lib/date-format'
 import {
   type ColorIdentityCount,
@@ -28,17 +29,52 @@ export const Route = createFileRoute('/stats')({
 
 const CHART_HEIGHT = 260
 
+// How many charts render per row — user-selectable (default 4). Tailwind's
+// JIT scanner needs literal class strings, so this maps each option to one
+// rather than building the class from the number at runtime. See roadmap
+// issue #108.
+type ChartsPerRow = 2 | 4 | 8
+const CHARTS_PER_ROW_OPTIONS: ChartsPerRow[] = [2, 4, 8]
+const CHARTS_GRID_CLASS: Record<ChartsPerRow, string> = {
+  2: 'grid-cols-1 sm:grid-cols-2',
+  4: 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4',
+  8: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8',
+}
+
 function StatsPage() {
   const { gameStats, collectionStats } = Route.useLoaderData()
   const hasCollectionData = collectionStats.colorIdentityDistribution.length > 0
+  const [chartsPerRow, setChartsPerRow] = useState<ChartsPerRow>(4)
+  const gridClass = `grid gap-8 ${CHARTS_GRID_CLASS[chartsPerRow]}`
 
   return (
-    <main>
-      <h1 className="font-display font-semibold text-2xl">Statistics</h1>
-      <p className="text-muted-foreground">
-        Built from your {gameStats.totalGames} logged game
-        {gameStats.totalGames === 1 ? '' : 's'}.
-      </p>
+    <main style={{ '--main-width': '90rem' } as React.CSSProperties}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h1 className="font-display font-semibold text-2xl">Statistics</h1>
+          <p className="text-muted-foreground">
+            Built from your {gameStats.totalGames} logged game
+            {gameStats.totalGames === 1 ? '' : 's'}.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-xs">Charts per row</span>
+          <div className="flex items-center gap-1 rounded-md border p-0.5">
+            {CHARTS_PER_ROW_OPTIONS.map((option) => (
+              <Button
+                key={option}
+                type="button"
+                size="sm"
+                variant={chartsPerRow === option ? 'default' : 'ghost'}
+                className="h-7 px-2 text-xs"
+                onClick={() => setChartsPerRow(option)}
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {gameStats.totalGames === 0 ? (
         <p className="mt-6 text-muted-foreground">
@@ -49,7 +85,7 @@ function StatsPage() {
           to see stats here.
         </p>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className={`mt-6 ${gridClass}`}>
           <ChartSection title="Games logged over time">
             <GamesByMonthChart data={gameStats.gamesByMonth} />
           </ChartSection>
@@ -73,7 +109,7 @@ function StatsPage() {
           Import a precon or custom deck to see collection stats here.
         </p>
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className={`mt-4 ${gridClass}`}>
           <ChartSection title="Color identity across owned decks">
             <ColorIdentityChart
               data={collectionStats.colorIdentityDistribution}
