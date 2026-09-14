@@ -74,6 +74,22 @@ const VIEW_MODE_OPTIONS: { value: ViewMode; label: string }[] = [
   { value: 'visual', label: 'Visual spoiler' },
 ]
 
+// Extra classes every text-mode card <li> needs: keep a card's line intact
+// instead of splitting across columns, and space consecutive lines within a
+// column (CSS multi-column layout doesn't support `gap` between stacked
+// items the way flexbox does). See roadmap issue #93.
+const TEXT_LI_CLASS = 'mb-1 break-inside-avoid-column'
+
+/** Text mode's `columns` CSS shorthand for a group/list: short lists stay a
+ * single column; longer ones get more, capped at 4 — and within that cap
+ * the browser narrows the actual column count to fit the viewport, so this
+ * naturally reflows at phone width too. See roadmap issue #93. */
+function textColumnsStyle(cardCount: number): React.CSSProperties {
+  const count =
+    cardCount <= 8 ? 1 : cardCount <= 16 ? 2 : cardCount <= 24 ? 3 : 4
+  return { columns: `${count} 14rem`, columnGap: '1.5rem' }
+}
+
 function DeckDetailPage() {
   const deck = Route.useLoaderData()
   const router = useRouter()
@@ -370,9 +386,12 @@ function DeckDetailPage() {
           </h2>
           <ul
             className={
-              viewMode === 'visual'
-                ? 'mt-2 flex flex-wrap gap-3'
-                : 'mt-2 flex flex-col gap-1'
+              viewMode === 'visual' ? 'mt-2 flex flex-wrap gap-3' : 'mt-2'
+            }
+            style={
+              viewMode === 'text'
+                ? textColumnsStyle(commanders.length)
+                : undefined
             }
           >
             {commanders.map((card) =>
@@ -442,9 +461,12 @@ function DeckDetailPage() {
             </h3>
             <ul
               className={
-                viewMode === 'visual'
-                  ? 'mt-1 flex flex-wrap gap-3'
-                  : 'mt-1 flex flex-col gap-1'
+                viewMode === 'visual' ? 'mt-1 flex flex-wrap gap-3' : 'mt-1'
+              }
+              style={
+                viewMode === 'text'
+                  ? textColumnsStyle(group.cards.length)
+                  : undefined
               }
             >
               {group.cards.map((card) =>
@@ -565,6 +587,7 @@ function PlanningCardLine({
     <li
       className={cn(
         'flex flex-wrap items-center justify-between gap-2 rounded px-1',
+        TEXT_LI_CLASS,
         owned && 'bg-green-100 dark:bg-green-950',
       )}
     >
@@ -632,14 +655,18 @@ function CardLine({
   // overlapping. See docs/PRODUCT.md#5-marking-a-shared-card.
   if (!card.isOverlapping && !card.isShared) {
     return (
-      <li className={viewMode === 'visual' ? undefined : 'rounded px-1'}>
+      <li
+        className={
+          viewMode === 'visual' ? undefined : cn('rounded px-1', TEXT_LI_CLASS)
+        }
+      >
         {label}
       </li>
     )
   }
 
   return (
-    <li>
+    <li className={viewMode === 'text' ? TEXT_LI_CLASS : undefined}>
       <SharedCardPicker
         card={card}
         label={label}
