@@ -1,0 +1,1 @@
+ALTER TABLE `cards` ADD `back_image_url` text;

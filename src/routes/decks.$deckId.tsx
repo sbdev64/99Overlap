@@ -4,6 +4,7 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
+import { RotateCw } from 'lucide-react'
 import { useState } from 'react'
 import { Combobox } from '@/components/combobox'
 import {
@@ -680,7 +681,8 @@ function CardLine({
 /** Moxfield-style hover preview: shows the card's Scryfall image next to its
  * name. Falls back to plain text when enrichment hasn't found an image yet
  * (or the card was never found on Scryfall) — see docs/PRODUCT.md#7. Text
- * mode only — Visual spoiler mode uses `CardTile` instead (#91). */
+ * mode only — Visual spoiler mode uses `CardTile` instead (#91). A
+ * double-faced card gets a "Show back"/"Show front" toggle — see #101. */
 function CardImagePreview({
   card,
   children,
@@ -688,12 +690,24 @@ function CardImagePreview({
   card: DeckCardEntry
   children: React.ReactNode
 }) {
+  const [showBack, setShowBack] = useState(false)
+
   if (!card.imageUrl) {
     return <>{children}</>
   }
 
+  const activeImage = showBack
+    ? (card.backImageUrl ?? card.imageUrl)
+    : card.imageUrl
+
   return (
-    <HoverCard openDelay={150} closeDelay={0}>
+    <HoverCard
+      openDelay={150}
+      closeDelay={0}
+      onOpenChange={(open) => {
+        if (!open) setShowBack(false)
+      }}
+    >
       <HoverCardTrigger asChild>
         <span className="cursor-pointer underline decoration-dotted underline-offset-2">
           {children}
@@ -701,19 +715,61 @@ function CardImagePreview({
       </HoverCardTrigger>
       <HoverCardContent className="w-56 p-1" side="right" align="start">
         <img
-          src={card.imageUrl}
+          src={activeImage}
           alt={card.name}
           loading="lazy"
           className="rounded-md"
         />
+        {card.backImageUrl && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-1 w-full text-xs"
+            onClick={() => setShowBack((v) => !v)}
+          >
+            {showBack ? 'Show front' : 'Show back'}
+          </Button>
+        )}
       </HoverCardContent>
     </HoverCard>
   )
 }
 
+/** A small flip toggle overlaid on a `CardTile`'s image. Rendered as a
+ * `<span>` (not a `<button>`) with its click stopped from bubbling — a
+ * `CardTile` can itself sit inside `SharedCardPicker`'s trigger `<button>`,
+ * and a nested `<button>` there would be invalid HTML and eat the click. See
+ * roadmap issue #101. */
+function FlipButton({ onFlip }: { onFlip: () => void }) {
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: can't be a real <button> — sometimes nests inside SharedCardPicker's trigger <button>
+    <span
+      role="button"
+      tabIndex={0}
+      aria-label="Flip card"
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onFlip()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          e.stopPropagation()
+          onFlip()
+        }
+      }}
+      className="absolute right-1 bottom-1 cursor-pointer rounded-full bg-background/80 p-1 shadow"
+    >
+      <RotateCw className="size-3" aria-hidden="true" />
+    </span>
+  )
+}
+
 /** Visual spoiler mode's card tile: always shows the card's image (or a
  * name-only placeholder when unenriched/not found), no hover needed. See
- * roadmap issue #91. */
+ * roadmap issue #91. A double-faced card gets a flip control — see #101. */
 function CardTile({
   card,
   badge,
@@ -721,20 +777,30 @@ function CardTile({
   card: DeckCardEntry
   badge?: React.ReactNode
 }) {
+  const [showBack, setShowBack] = useState(false)
+  const activeImage = showBack
+    ? (card.backImageUrl ?? card.imageUrl)
+    : card.imageUrl
+
   return (
     <div className="flex w-24 flex-col items-center gap-1 text-center">
-      {card.imageUrl ? (
-        <img
-          src={card.imageUrl}
-          alt={card.name}
-          loading="lazy"
-          className="aspect-5/7 w-full rounded-md object-cover"
-        />
-      ) : (
-        <div className="flex aspect-5/7 w-full items-center justify-center rounded-md border border-dashed p-1 text-[10px] text-muted-foreground">
-          {card.name}
-        </div>
-      )}
+      <div className="relative w-full">
+        {activeImage ? (
+          <img
+            src={activeImage}
+            alt={card.name}
+            loading="lazy"
+            className="aspect-5/7 w-full rounded-md object-cover"
+          />
+        ) : (
+          <div className="flex aspect-5/7 w-full items-center justify-center rounded-md border border-dashed p-1 text-[10px] text-muted-foreground">
+            {card.name}
+          </div>
+        )}
+        {card.backImageUrl && (
+          <FlipButton onFlip={() => setShowBack((v) => !v)} />
+        )}
+      </div>
       <span className="line-clamp-2 text-[11px] leading-tight">
         {card.quantity > 1 && `${card.quantity}× `}
         {card.name}

@@ -96,6 +96,9 @@ export interface DeckCardEntry {
   board: TrackedBoard
   /** From Scryfall enrichment (#18); null until enriched or if not found. */
   imageUrl: string | null
+  /** A double-faced card's back face image; null for single-faced and
+   * split/Room/Adventure-type cards. See roadmap issue #101. */
+  backImageUrl: string | null
   typeLine: string | null
   /** Comma-separated WUBRG letters, e.g. "W,U"; "" for colorless. */
   colorIdentity: string | null
@@ -158,8 +161,18 @@ export const getDeck = createServerFn({ method: 'GET' })
     // Lazily backfills cards imported before Scryfall enrichment (#18)
     // existed — on-import enrichment alone would otherwise never reach
     // decks that were already saved. Best-effort; see enrichCards.
+    //
+    // Also retries cards enriched before back-face capture existed (#101):
+    // re-querying every already-enriched card forever would be wasteful, so
+    // this narrows to names containing a slash — a cheap, reliable proxy for
+    // "might be double-faced" — rather than re-checking every card.
     const unenriched = deck.deckCards
-      .filter((deckCard) => deckCard.card.scryfallId === null)
+      .filter(
+        (deckCard) =>
+          deckCard.card.scryfallId === null ||
+          (deckCard.card.backImageUrl === null &&
+            deckCard.card.name.includes('/')),
+      )
       .map((deckCard) => ({ id: deckCard.card.id, name: deckCard.card.name }))
     if (unenriched.length > 0) {
       await enrichCards(db, unenriched)
@@ -259,6 +272,7 @@ export const getDeck = createServerFn({ method: 'GET' })
           quantity: deckCard.quantity,
           board: deckCard.board,
           imageUrl: deckCard.card.imageUrl,
+          backImageUrl: deckCard.card.backImageUrl,
           typeLine: deckCard.card.typeLine,
           colorIdentity: deckCard.card.colorIdentity,
           cmc: deckCard.card.cmc,
