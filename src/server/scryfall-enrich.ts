@@ -77,8 +77,13 @@ function normalizeForMatch(name: string): string {
 // Phantom" match as combined strings, only "Delver of Secrets" /
 // "Lunarch Veteran" do). Scryfall's response still carries the full
 // combined name, so no change is needed on the matching side below.
+//
+// The separator isn't always Scryfall's canonical double slash, though —
+// confirmed against the real production DB, at least one card was stored as
+// "Lunarch Veteran / Luminous Phantom" (a single slash), so the split must
+// tolerate both. See roadmap issue #100.
 export function scryfallQueryName(name: string): string {
-  return name.split(' // ')[0] ?? name
+  return name.split(/\s+\/{1,2}\s+/)[0] ?? name
 }
 
 /**
