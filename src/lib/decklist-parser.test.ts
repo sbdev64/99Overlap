@@ -86,6 +86,26 @@ describe('parseDecklist', () => {
     }
   })
 
+  test('strips a set code followed by both a collector number and a separate foil marker', () => {
+    // A collector number and a standalone `*F*` foil marker are two
+    // trailing tokens, not one — see roadmap issue #113.
+    const result = parseDecklist(
+      "1 Herald's Horn (FIC) 228 *F*\n1 Lyra Dawnbringer (FDN) 707 *F*",
+      { commanderCount: 0 },
+    )
+
+    expect(result.entries).toContainEqual({
+      name: "Herald's Horn",
+      quantity: 1,
+      board: 'mainboard',
+    })
+    expect(result.entries).toContainEqual({
+      name: 'Lyra Dawnbringer',
+      quantity: 1,
+      board: 'mainboard',
+    })
+  })
+
   test('parses a bare-format export (no set codes) with an explicit Commander header', () => {
     const result = parseDecklist(VOJA_EXPORT)
 
