@@ -68,6 +68,19 @@ function normalizeForMatch(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
+// Moxfield (and this app's Card.name) stores a double-faced card's full
+// "Front // Back" display name, but Scryfall's collection endpoint only
+// ever recognizes such a card by its front face alone — querying the
+// combined string returns not_found even though the card exists. See
+// roadmap issue #89 (confirmed against the real API: neither "Delver of
+// Secrets // Insectile Aberration" nor "Lunarch Veteran // Luminous
+// Phantom" match as combined strings, only "Delver of Secrets" /
+// "Lunarch Veteran" do). Scryfall's response still carries the full
+// combined name, so no change is needed on the matching side below.
+export function scryfallQueryName(name: string): string {
+  return name.split(' // ')[0] ?? name
+}
+
 /**
  * Looks up `names` on Scryfall (batched, name-based) and returns whatever
  * was found, keyed by normalized name (see normalizeForMatch). Best-effort:
@@ -89,7 +102,7 @@ async function fetchEnrichment(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          identifiers: batch.map((name) => ({ name })),
+          identifiers: batch.map((name) => ({ name: scryfallQueryName(name) })),
         }),
       })
       if (!res.ok) {
