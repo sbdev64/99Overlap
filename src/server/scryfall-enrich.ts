@@ -11,6 +11,9 @@ const BATCH_SIZE = 75
 // Only relevant when more than one batch is needed; still polite per
 // Scryfall's rate-limiting guidance (~50-100ms between requests).
 const BATCH_DELAY_MS = 100
+// Per-name fallback for a name the collection endpoint doesn't recognize —
+// see the comment on fetchByExactName below.
+const NAMED_URL = 'https://api.scryfall.com/cards/named'
 
 interface ScryfallCardFace {
   mana_cost?: string
@@ -95,6 +98,27 @@ export function scryfallQueryName(name: string): string {
   return name.split(/\s+\/{1,2}\s+/)[0] ?? name
 }
 
+// The collection endpoint only matches a card's canonical `name` — a card
+// printed under an alternate cosmetic "flavor name" (e.g. Secret Lair
+// crossovers: Scryfall's canonical name is "Giada, Font of Hope", with
+// flavor_name "Miku, Font of Pop") comes back not_found even though it
+// exists. `/cards/named?exact=` also resolves a flavor name to its card,
+// while — unlike `?fuzzy=` — still requiring an exact match, so it can't
+// silently mismatch to the wrong card. Used as a per-name fallback only for
+// whatever the batch lookup missed, so the common (canonical-name) case
+// still costs one batched request. See roadmap issue #105 (confirmed
+// against the real API and the real production DB).
+async function fetchByExactName(name: string): Promise<ScryfallCard | null> {
+  try {
+    const res = await fetch(`${NAMED_URL}?exact=${encodeURIComponent(name)}`)
+    if (!res.ok) return null
+    return (await res.json()) as ScryfallCard
+  } catch (err) {
+    console.warn('Scryfall exact-name fallback failed:', err)
+    return null
+  }
+}
+
 /**
  * Looks up `names` on Scryfall (batched, name-based) and returns whatever
  * was found, keyed by normalized name (see normalizeForMatch). Best-effort:
@@ -129,6 +153,20 @@ async function fetchEnrichment(
       }
     } catch (err) {
       console.warn('Scryfall enrichment batch failed:', err)
+    }
+  }
+
+  // Fallback pass, one request per name — see fetchByExactName. Only runs
+  // for names the batch lookup above didn't match (typically none).
+  const unmatched = names.filter((name) => !found.has(normalizeForMatch(name)))
+  for (const name of unmatched) {
+    await sleep(BATCH_DELAY_MS)
+    const card = await fetchByExactName(scryfallQueryName(name))
+    if (card) {
+      // Keyed by the name we queried with (not card.name, which is the
+      // canonical name — different from a flavor name query) so the lookup
+      // in enrichCards below still finds it.
+      found.set(normalizeForMatch(name), toEnrichment(card))
     }
   }
 
